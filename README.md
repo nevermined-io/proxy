@@ -37,13 +37,6 @@ friction-less is the solution the better.
 To facilitate the understanding of the PoC and how is implemented we are gonna use two use cases. 
 One of them using an internal web service (we operate and can control) and an external web service (running somewhere).
 
-We use the following actors in the PoC:
-
-* The Service Owner or **Publisher**. This actors owns/control a web service and wants to make it available under some 
-  conditions (payment) to the rest of the world.
-* The Service Consumer or **Client**. This actor wants to get access to the web service to integrate the data provided in 
-  his/her application.
-
 ### Internal Web Service
 
 ```
