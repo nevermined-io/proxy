@@ -69,11 +69,11 @@ yarn start:web-service
 yarn start:proxy
 
 # test endpoints
-curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3001
+curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3000 --proxy http://localhost:3001
 
 # test endpoint with query parameters
-curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3001/sum?a=1&b=2
+curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3000/sum?a=1&b=2 --proxy http://localhost:3001
 
 # not setting the authorization header should return a 401
-curl http://localhost:3001
+curl http://localhost:3000 --proxy http://localhost:3001
 ```
