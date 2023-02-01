@@ -14,27 +14,27 @@ The proxy will leverage Nevermined core product to provide that functionality.
 
 This PoC will ask the following questions:
 
-* How can we gate-keep internal and/or external web services?
-* How can we provide access to these services using NFT susbcriptions?
-* What are the flows that need to be supported?
-* What is the architecture of the solution?
-* What would be a high-level estimation to include this solution as part of the core product?
+- How can we gate-keep internal and/or external web services?
+- How can we provide access to these services using NFT susbcriptions?
+- What are the flows that need to be supported?
+- What is the architecture of the solution?
+- What would be a high-level estimation to include this solution as part of the core product?
 
 ## PoC Requirements
 
 The solution proposed or designed must take into account the following requirements:
 
-* The modifications required by the service provider must be as small as possible or ideally zero.
-* The modifications required by user of the service must be as small as possible or ideally zero.
-* If some changes need to be done, it is prefered these changes are service or client configuration over code modifications
-* If some code modifications need to be done they must be as close to a recognized standard as possible.
+- The modifications required by the service provider must be as small as possible or ideally zero.
+- The modifications required by user of the service must be as small as possible or ideally zero.
+- If some changes need to be done, it is prefered these changes are service or client configuration over code modifications
+- If some code modifications need to be done they must be as close to a recognized standard as possible.
 
 The adoption of the end solution will be influenced by the requirements introduced to the users. The simpler and
 friction-less is the solution the better.
 
 ## PoC Use Case
 
-To facilitate the understanding of the PoC and how is implemented we are gonna use two use cases. 
+To facilitate the understanding of the PoC and how is implemented we are gonna use two use cases.
 One of them using an internal web service (we operate and can control) and an external web service (running somewhere).
 
 ### Internal Web Service
@@ -49,7 +49,6 @@ HTTP GET http://marketplace.nevermined.localnet/api/v1/metadata/assets
 As a Client I want to get access to the search API of the marketplace.
 ```
 
-
 ### External Web Service, tokenizing Twitter API
 
 ```
@@ -57,4 +56,24 @@ As a Publisher I want to make available my Twitter API allowing others to send m
 for a price of 1 MATIC.
 
 As a Client I want to send messages throgh the Twitter API.
+```
+
+## Demo
+
+```bash
+
+# start an example web service (http://localhost:3000)
+yarn start:web-service
+
+# start the proxy (http://localhost:3001) - it will print out a valid access token
+yarn start:proxy
+
+# test endpoints
+curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3001
+
+# test endpoint with query parameters
+curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3001/sum?a=1&b=2
+
+# not setting the authorization header should return a 401
+curl http://localhost:3001
 ```
