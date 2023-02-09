@@ -1,12 +1,31 @@
 const express = require('express')
+const jose = require('jose')
 const app = express()
-const port = 4000
+
+const SERVER_PORT = 4000
+
+// The HTTP header name including the authorization token
+const NVM_AUTHORIZATION_HEADER = 'nvm-authorization'
+
+// The original full URL requested to the proxy will be included in a HTTP header with the following name
+const NVM_REQUESTED_URL_HEADER = 'nvm-requested-url'
+
+const JWT_SECRET = new Uint8Array(32)
+
+
+const validateAuthorization = async (authorizationHeader) => {
+  const token = authorizationHeader.split(' ')[1]
+  const { _header, payload } = await jose.jwtDecrypt(token, JWT_SECRET)
+
+  return payload
+}
+
 
 app.get('/', (req, res) => {
   res.send('Oauth server')
 })
 
-app.post('/introspect', (req, res) => {
+app.post('/introspect', async (req, res) => {
     let a = Number(req.query.a)
     let b = Number(req.query.b)
     let result = `${a + b}`
@@ -15,7 +34,30 @@ app.post('/introspect', (req, res) => {
     console.log(` Headers: ${JSON.stringify(req.headers)}`)
     console.log(` Query  : ${JSON.stringify(req.query)}`)
     console.log(` Params : ${JSON.stringify(req.params)}`)
-    console.log(` Body   : ${JSON.stringify(req.body)}`)
+    console.log(` Body   : ${JSON.stringify(req.body)}`)    
+
+    // validate authorization header
+    let payload
+    try {
+      payload = await validateAuthorization(req.headers[NVM_AUTHORIZATION_HEADER])
+    } catch (err) {
+      console.error(err)
+      res.writeHead(401)
+      res.end()
+      return
+    }
+
+    const requestedUrl = req.headers[NVM_REQUESTED_URL_HEADER]
+
+    // validate origin url is valid
+    const url = new URL(requestedUrl)
+  
+    if (!payload.endpoints.includes(url.origin)) {
+      console.log(`${url.origin} not in ${payload.endpoints}`)
+      res.writeHead(401)
+      res.end()
+      return
+    }
 
     const response = {
       "active": true,
@@ -33,8 +75,8 @@ app.post('/introspect', (req, res) => {
     res.send(response)
 })
 
-app.listen(port, () => {
-  console.log(`OAuth server listening on port ${port}`)
+app.listen(SERVER_PORT, () => {
+  console.log(`OAuth server listening on port ${SERVER_PORT}`)
 })
 
 // Oauth Server request
