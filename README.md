@@ -58,7 +58,7 @@ for a price of 1 MATIC.
 As a Client I want to send messages throgh the Twitter API.
 ```
 
-## Demo
+## Demo with js proxy implementation
 
 ```bash
 
@@ -76,4 +76,37 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQi
 
 # not setting the authorization header should return a 401
 curl http://localhost:3000 --proxy http://localhost:3001
+```
+
+## Demo with NGNIX Proxy
+
+It requires a NGNIX proxy with `auth_request` and `njs` modules
+
+```bash
+apt install nginx-module-njs
+```
+
+Configure the NGINX conf files from the `conf/nginx` folder.
+
+```bash
+# Start the web service
+node src/web-service.js
+
+# Start the Oauth instrospection server
+node src/oauth-server.js
+
+# Start NGINX
+sudo service nginx restart
+
+# NGINX logs are available here
+sudo tail -f /var/log/nginx/*.log
+
+# Make a HTTP request to the webservice using NGINX as proxy
+curl -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:80 -H "Authorization: Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..TUhN0_EMCB2vDUF1cK1FAw.rFhU4azbNPeiWyhhrpICDmEbvjvYxMRoCR7b9Xbmx3V1e7Wv6HyfrMdJ37IBrxECBbUPeGZZUBa4IHOkwtvOlY9EkTh_OVyIVYA80VnWKB1LpwXUn6oMhxBetues_ToxEQKKi7RgGggAOdk9n9AASOD31rFb2ozbwvSpu7EqyRrexfjBtryzI1SfBkjQARlgw1NBoqMXWBFDiLL4pvR7GpHPPEasNbyOpr9avDtJ9-LXGVl__wYR4E2ksVhzw1QL3zO-l6cPWVzTV8MK_YEmaA.YuDjoCrPVjl19dzCDsn_iQ"
+Hello World!
+
+# Making a request directly to the endpoint should fail
+curl -X GET http://127.0.0.1:3000
+Unauthorized!!!!
+
 ```

@@ -53,13 +53,30 @@ Having into account these 2 concepts, from Nevermined we can provide a way to ga
 * Subscription DID
 * Service DID
 * Client public address
+* Endpoints
+* Headers/Authentication required by the webservice
 
 The authentication of the user can be implemented via the validation of the signature of the JWT. Having the public address of the client, the proxy can check if that address is a valid subscriber of the service via balance request to the NFT (ERC-721) Subscription Smart Contract.
 
 If the client is NOT a subscriptor the proxy will return a HTTP 401 Unauthorized error message.
 If the client is a subscriptor the proxy will parse the service description and check if the resource requested is included as part of the service. If it's the proxy will send the request to the external web service and return the response.
 
-## Securing web services
+## Access Control via Proxy
+
+The Proxy will validate that incoming requests are authenticated via OAuth 2.0 validation based on JSON Web Token (JWT) as defined by RFC 7519.
+
+After authentication, a client presents its access token with each HTTP request to gain access to protected resources. Validation of the access token is required to ensure that it was  issued by a trusted identity provider (IdP) and that it has not expired. Because IdPs cryptographically sign the JWTs they issue, JWTs can be validated “offline” without a runtime dependency on the IdP. Typically, a JWT also includes an expiry date which can also be checked.
+
+The standard method for validating access tokens with an IdP is called token introspection. RFC 7662, OAuth 2.0 Token Introspection, is now a widely supported standard that describes a JSON/REST interface that a Relying Party uses to present a token to the IdP, and describes the structure of the response. It is supported by many of the leading IdP vendors and cloud providers.
+
+
+
+
+
+
+
+
+## Securing web services 
 
 If clients have direct access to web services any protection introduced by a proxy can be skipped. Because of that and specially for services running in a public network it's highly recommended to configure some protections:
 
