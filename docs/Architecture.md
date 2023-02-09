@@ -69,18 +69,14 @@ After authentication, a client presents its access token with each HTTP request 
 
 The standard method for validating access tokens with an IdP is called token introspection. RFC 7662, OAuth 2.0 Token Introspection, is now a widely supported standard that describes a JSON/REST interface that a Relying Party uses to present a token to the IdP, and describes the structure of the response. It is supported by many of the leading IdP vendors and cloud providers.
 
+![NGINX Integration](images/ARCH_Nginx_integration.png)
+
+For the PoC we used 2 approaches, one using a bespoke proxy and another one using NGINX as reverse proxy. Using NGINX is more suitable for production environments because can protect more effectively the instrospection requests, that are delegated to the OAuth Instrospection server. That server has been implemented in Javascript and performs the JWT - JWE decryption, validation of the urls requested, and return of the authorization token required by the end web service to authorize the user request.
 
 
-
-
-
-
-
-## Securing web services 
+## Securing web services
 
 If clients have direct access to web services any protection introduced by a proxy can be skipped. Because of that and specially for services running in a public network it's highly recommended to configure some protections:
 
-* Implement some network protection in the service or the access point to it. It is recommended to only allow requests comming from a trusted Nevermined proxy.
-* Implement some service authorization (basic, oauth) that protect that service to be accessed by anyone not able to authenticate
-* As a complement, implement some validation of the authorization header sent by the Nevermined proxy
-
+* Implement some **network protection** in the service or the access point to it. It is recommended to only allow requests comming from a trusted Nevermined proxy.
+* Implement OAuth service authorization protecting that service to be accessed by anyone not able to authenticate
