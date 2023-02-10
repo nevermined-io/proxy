@@ -26,9 +26,6 @@ app.get('/', (req, res) => {
 })
 
 app.post('/introspect', async (req, res) => {
-    let a = Number(req.query.a)
-    let b = Number(req.query.b)
-    let result = `${a + b}`
 
     console.log(`Request --------`)
     console.log(` Headers: ${JSON.stringify(req.headers)}`)
@@ -36,7 +33,8 @@ app.post('/introspect', async (req, res) => {
     console.log(` Params : ${JSON.stringify(req.params)}`)
     console.log(` Body   : ${JSON.stringify(req.body)}`)    
 
-    // validate authorization header
+    // Validation Steps:
+    // 1. The Authorization is there, can be decripted and is valid
     let payload
     try {
       payload = await validateAuthorization(req.headers[NVM_AUTHORIZATION_HEADER])
@@ -47,10 +45,8 @@ app.post('/introspect', async (req, res) => {
       return
     }
 
-    const requestedUrl = req.headers[NVM_REQUESTED_URL_HEADER]
-
-    // validate origin url is valid
-    const url = new URL(requestedUrl)
+    // 2. The URL requested is granted
+    const url = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
   
     if (!payload.endpoints.includes(url.origin)) {
       console.log(`${url.origin} not in ${payload.endpoints}`)
@@ -58,20 +54,42 @@ app.post('/introspect', async (req, res) => {
       res.end()
       return
     }
+    
+    // 3. The JWT is not expired
+    const now = Math.floor(Date.now() / 1000)
+    const stillValid = now < payload.exp
+
+    console.log(`IAT = ${payload.iat}`)
+    console.log(`EXP = ${payload.exp}`)
+    console.log(`NOW = ${now}`)
+    console.log(`Seconds pending = ${payload.exp - now}`)
+    console.log(`Is still valid? ${stillValid}`)
+
+    if (!stillValid)  {
+      console.log(`Token expired`)
+      res.writeHead(401)
+      res.end()
+      return
+    }
+
+    // Getting the access token from the JWT message
+    let serviceToken = ''
+    for (let index = 0; index < payload.headers.length; index++) {
+      if (payload.headers[index]['authorization']) {
+        const tokens = payload.headers[index]['authorization'].split(' ')
+        serviceToken = tokens.length > 1 ? tokens[1] : tokens[0]
+      }
+    }
 
     const response = {
       "active": true,
-      "client_id": "l238j323ds-23ij4",
-      "username": "jdoe",
-      "service_token": "new_authorization_token",
-      "scope": "read write dolphin",
-      "sub": "Z5O3upPC88QrAjx00dis",
-      "aud": "https://protected.example.net/resource",
-      "iss": "https://server.example.com/",
-      "exp": 1419356238,
-      "iat": 1419350238,
-      "extension_field": "twenty-seven"
+      "user_id": payload.userId,
+      "service_token": serviceToken,      
+      "scope": payload.did,
+      "exp": payload.exp,
+      "iat": payload.iat
     }
+    console.log(`RESPONSE:\n${JSON.stringify(response)}`)
     res.send(response)
 })
 

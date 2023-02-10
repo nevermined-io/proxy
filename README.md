@@ -102,7 +102,7 @@ sudo service nginx restart
 sudo tail -f /var/log/nginx/*.log
 
 # Make a HTTP request to the webservice using NGINX as proxy
-curl -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:3128 -H "NVM-Authorization: Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..TUhN0_EMCB2vDUF1cK1FAw.rFhU4azbNPeiWyhhrpICDmEbvjvYxMRoCR7b9Xbmx3V1e7Wv6HyfrMdJ37IBrxECBbUPeGZZUBa4IHOkwtvOlY9EkTh_OVyIVYA80VnWKB1LpwXUn6oMhxBetues_ToxEQKKi7RgGggAOdk9n9AASOD31rFb2ozbwvSpu7EqyRrexfjBtryzI1SfBkjQARlgw1NBoqMXWBFDiLL4pvR7GpHPPEasNbyOpr9avDtJ9-LXGVl__wYR4E2ksVhzw1QL3zO-l6cPWVzTV8MK_YEmaA.YuDjoCrPVjl19dzCDsn_iQ"
+curl -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:3128 -H "NVM-Authorization: Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..6UxkNXw3frD76QY-DToX-w.PnJHXcF4P8m50MNIOjbz33WDHsLCDrk-8C3pMprJVpKOYQurlmup6dXtRgCVRQ6hXbSTnLEcyqbuqWk2rHnAHsgkODapiT0APlZhL5y6E5WEDSjmQEPjDkhahy5_VuOfnx5iAhOLgy_Vd-9wsWgZ-_S3w2DJ-RMV41rm12s6cd2XOFex_HcNaBBdG_OQQEBVttpGpnsiiFf9o__TnaVzxKPYwjck1EXQmEUKqWtosWKr8a6s5nVvqavksdz7d-EKVOEPbJR0Dt__AyJeacgoPYWGZjwhbqY_nybD2-xUITRxWXmBfDFY8dCcDk9o1c9QkT36DMWSFZQyZEqIhmv9FmFkRJYp8amvX1N9qPMesHo.UwuspOTtQDc12LVkLFc1gg"
 Hello World!
 
 # Making a request directly to the endpoint should fail
