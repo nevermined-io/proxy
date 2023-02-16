@@ -4,12 +4,21 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start:web-service": "node src/web-service.js",
-    "start:proxy": "node src/proxy.js"
+    "clean": "rm -rf ./dist/ ./doc/ ./.nyc_output",
+    "prebuild": "rm -rf ./dist && mkdir ./dist ",
+    "build": "tsc",
+    "start:web-service": "node dist/src/web-service.js",
+    "start:proxy": "node src/proxy.js",
+    "start:oauth-server": "node dist/src/oauth-server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "http-proxy": "^1.18.1",
-    "jsonwebtoken": "^9.0.0"
+    "jose": "^4.5.1",
+    "jsonwebtoken": "^9.0.0",
+    "typescript": "~4.9.5"
+  }, 
+  "devDependencies": {
+    "@types/node": "~18.13.0"
   }
 }
