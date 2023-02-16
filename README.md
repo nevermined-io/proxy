@@ -69,10 +69,10 @@ yarn start:web-service
 yarn start:proxy
 
 # test endpoints
-curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3000 --proxy http://localhost:3128
+curl -H "NVM-Authorization: Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..8xeTgS2rVxezo-VT6AYz7A.Aay2eFBnfsfwtWeZxBQyeFsdW9b3JfSv-ZFSnFU9s4XgxgZObGI9qf8cat4azkKB_0ZqisZAUNYQxYFL26wC3xYB_-XLb-w51OVsIf30LSwFEd3SGrzn-UORRcfXWb1qwVc52_qDmOgEmRCOonCP7CG98uRhIww1s0Ler_H_ELAVCmE7GKmjJGJlMSxX7I-p9ZYAsIn9oAtyVCZsmbfx-rmmrVhcko1lFIISKr4JXAeH3596eyK9hvFS1Om1ADz3B-S0xa2bO1TK3fxdhe8jT9r9fUEinF1Nhk8JBI6w1sGmpr5wevefOKyIMAixO8cvPzbDt8bF4BXQVme8WF66Fyloxzlbsw34ZbtonYLSgKI.7fk6xXWe4vzc9zitY8gJCw" http://127.0.0.1:3000 --proxy http://127.0.0.1:3128
 
 # test endpoint with query parameters
-curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3000/sum?a=1&b=2 --proxy http://localhost:3128
+curl -H "NVM-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3000/sum?a=1&b=2 --proxy http://localhost:3128
 
 # not setting the authorization header should return a 401
 curl http://localhost:3000 --proxy http://localhost:3128
@@ -86,14 +86,18 @@ It requires a NGNIX proxy with `auth_request` and `njs` modules
 apt install nginx-module-njs
 ```
 
-Configure the NGINX conf files from the `conf/nginx` folder.
+Configure the NGINX conf files from the `conf/nginx` folder. And configure the SSL certificates. You have some info about how to do it in the `Dockerfile`.
 
 ```bash
+# Install dependencies and compile
+yarn
+yarn build 
+
 # Start the web service
-node src/web-service.js
+yarn run start:web-service
 
 # Start the Oauth instrospection server
-node src/oauth-server.js
+yarn run start:oauth-server
 
 # Start NGINX
 sudo service nginx restart
@@ -101,8 +105,14 @@ sudo service nginx restart
 # NGINX logs are available here
 sudo tail -f /var/log/nginx/*.log
 
+# Go to the SDK-JS and run
+yarn run integration:external
+
+# If we want to see this working using curl, copyt the Access Token from the previous test and export as `NVM_TOKEN` env var
+export NVM_TOKEN="eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..hI4CMYSs0tqFYdof4hFiUw.2jK41Lgpua6XKZtFvqwjQS3gJDbSs0DVDMNnSW55NVOKVqQqBA1RE2InYpUY3aVJsqdsQ1nT5KpNH-MfwCyk85paoMSTiuHOW1t0bN8dB7PwyMkM5Ubf-8bg3q3rIEpDT7QtQ2M7YbP1t3HL8jhJZDStJ_2AYnumUvCVmKDtPUe_FmVdPcW66ta-d3YWKXkwKN1Ajrdnlsav58f-u6wE-qck_UtzqMpOI1ePmK3I-FBTYtSnpyUZrQu3XOXV2TR23kKaUtclhSdtHSMQHug__5Oe2Ibo3QI0AauThAHD6q98BL3iZn9fH2aCsUP2uFifRc0kC2PrWCz1F1upmaKWg2oJ9Yh9YADA95mcOjH_KSM.7tYdcSQ-AS9zdROBRUOh1g"
+
 # Make a HTTP request to the webservice using NGINX as proxy
-curl -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:3128 -H "NVM-Authorization: Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..6UxkNXw3frD76QY-DToX-w.PnJHXcF4P8m50MNIOjbz33WDHsLCDrk-8C3pMprJVpKOYQurlmup6dXtRgCVRQ6hXbSTnLEcyqbuqWk2rHnAHsgkODapiT0APlZhL5y6E5WEDSjmQEPjDkhahy5_VuOfnx5iAhOLgy_Vd-9wsWgZ-_S3w2DJ-RMV41rm12s6cd2XOFex_HcNaBBdG_OQQEBVttpGpnsiiFf9o__TnaVzxKPYwjck1EXQmEUKqWtosWKr8a6s5nVvqavksdz7d-EKVOEPbJR0Dt__AyJeacgoPYWGZjwhbqY_nybD2-xUITRxWXmBfDFY8dCcDk9o1c9QkT36DMWSFZQyZEqIhmv9FmFkRJYp8amvX1N9qPMesHo.UwuspOTtQDc12LVkLFc1gg"
+curl -vvv -k --proxy-insecure -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:3128 -H "NVM-Authorization: Bearer $NVM_TOKEN"
 Hello World!
 
 # Making a request directly to the endpoint should fail
@@ -111,9 +121,54 @@ Unauthorized!!!!
 
 ```
 
-Also you can go to the sdk-js and use the integration test:
+## OpenAI API demo
+
+Assuming we have NGINX already running from the previous demo:
 
 ```bash
+export OPENAI_API_KEY="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"
+export SERVICE_ENDPOINT="https://api.openai.com/v1/completions"
+
+## We need this 2 if we want to use the SDK test
+export AUTHORIZATION_TOKEN=$OPENAI_API_KEY
+
+export PROXY_URL="https://127.0.0.1:443"
+export SERVICE_ENDPOINT="https://api.openai.com/v1/completions"
+export REQUEST_DATA='{"model": "text-davinci-003", "prompt": "Say this is a test", "temperature": 0, "max_tokens": 7}'
+```
+
+We go to the `sdk-js` and run the integration test
+
+```bash
+
 cd sdk-js
 yarn run integration:external
+
+...
+ 200 - {"id":"cmpl-6kbaUQIZFe6iamppJLEHtx5j7r0xS","object":"text_completion","created":1676565594,"model":"text-davinci-003","choices":[{"text":"\n\nThis is indeed a test","index":0,"logprobs":null,"finish_reason":"length"}],"usage":{"prompt_tokens":5,"completion_tokens":7,"total_tokens":12}}
+...
+
+```
+We can also see this working with curl, copy the "Access Token" from the previous test and run:
+
+```bash
+export NVM_TOKEN="eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..1LYqALYanLBQPmsMvPP0ug.For0wiUUMVUAxB6vvhhSjCjSucfb8dgf5pz3v-YJPxiDZ5QMr7oB5ShSUh9OErlDShmqumd-rWRcqfXuns7R6FvDMC457jTZe6P2YyFZ_rsU3TLBiv6cyF7Br3B-wshZIaG_MiKoCZqZQJXtIbZhIx4TXdtJc7yKLSRkMP_-kSMROLKlrKuwWuLow6_5G-aOyqJkU0CdZJ-iEY42eh4L0YYALZ3LZlDII-Wv45pPm6Yki3DcgCYfpZ7zSEHJpoSXm3wCB4FJ7enKPxQ02ViRMwwJldvQzrPO2XMbGAmg7OVxMN2iI6PaenUQSO76toX04cgsEnEimKUOifY0Gl_MBBFr4R0AAoCdCW7Jxxq0VBsy1H8qVRb29rR2Ql2IRmOX.1ZN258dHRBHZewKNDhwFbQ"
+
+
+curl -k -v -H "Content-Type: application/json"  -H "NVM-Authorization: Bearer $NVM_TOKEN" -d "$REQUEST_DATA" -H "Host: api.openai.com" https://127.0.0.1:443/v1/completions
+
+...
+{"id":"cmpl-6kc2PI82Y2OzdvOoqNDH00m6DrXDn","object":"text_completion","created":1676567325,"model":"text-davinci-003","choices":[{"text":"\n\nThis is indeed a test","index":0,"logprobs":null,"finish_reason":"length"}],"usage":{"prompt_tokens":5,"completion_tokens":7,"total_tokens":12}}
+
+...
+```
+
+
+### Running the NGINX proxy via Docker
+
+It will not have visibility to the web service running in localhost:3000, but allows to connect to remote apis like the one of OpenAI:
+
+```
+docker build . -t nginx-proxy
+docker run -p 443:443 -p 3128:3128 nginx-proxy
 ```

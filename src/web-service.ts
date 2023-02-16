@@ -1,4 +1,5 @@
-const express = require('express')
+import express from 'express'
+
 const app = express()
 const port = 3000
 
@@ -6,7 +7,7 @@ const AUTH_TOKEN = 'new_authorization_token'
 
 app.get('/', (req, res) => {
 
-  console.log(`Request --------`)
+  console.log(`Request --------`)  
   console.log(` Headers: ${JSON.stringify(req.headers)}`)
   console.log(` Query  : ${JSON.stringify(req.query)}`)
   console.log(` Params : ${JSON.stringify(req.params)}`)
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/sum', (req, res) => {
+  
     let a = Number(req.query.a)
     let b = Number(req.query.b)
     let result = `${a + b}`
