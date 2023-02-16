@@ -78,5 +78,6 @@ For the PoC we used 2 approaches, one using a bespoke proxy and another one usin
 
 If clients have direct access to web services any protection introduced by a proxy can be skipped. Because of that and specially for services running in a public network it's highly recommended to configure some protections:
 
+* Implement OAuth service authorization protecting that service to be accessed by anyone not able to authenticate. Via the Nevermined service registration, the OAuth token can be encripted allowing that only the asset provider can provide a valid JWT header.
 * Implement some **network protection** in the service or the access point to it. It is recommended to only allow requests comming from a trusted Nevermined proxy.
-* Implement OAuth service authorization protecting that service to be accessed by anyone not able to authenticate
+
