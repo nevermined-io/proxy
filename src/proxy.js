@@ -1,3 +1,6 @@
+// WARNING: This proxy basic implementation is here for historical purposes.
+// To do a full test please use the NGINX proxy implementation found in this repo.
+
 var http = require('http'),
     httpProxy = require('http-proxy');
     jwt = require('jsonwebtoken')
