@@ -4,12 +4,6 @@ LABEL maintainer="Nevermined <root@nevermined.io>"
 EXPOSE 3128 
 EXPOSE 443
 
-RUN mkdir -p /etc/ssl/certs/
-RUN mkdir -p /etc/ssl/private/
-
-COPY conf/certs/*.pem /etc/ssl/certs/
-COPY conf/certs/*.key /etc/ssl/private/
-
 RUN apk update && apk upgrade && \
     apk add --no-cache --virtual .build-deps \
     curl \
