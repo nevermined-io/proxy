@@ -5,6 +5,23 @@
 > Proxy for connecting tokenized web services
 > [nevermined.io](https://nevermined.io)
 
+Table of Contents
+=================
+
+- [Nevermined Proxy PoC](#nevermined-proxy-poc)
+- [Table of Contents](#table-of-contents)
+  - [Info](#info)
+  - [Requirements](#requirements)
+  - [How to run the proxy](#how-to-run-the-proxy)
+    - [Environment variables](#environment-variables)
+    - [Running the NGINX proxy via Docker](#running-the-nginx-proxy-via-docker)
+  - [Demos](#demos)
+    - [Demo with NGNIX Proxy](#demo-with-ngnix-proxy)
+    - [OpenAI API demo](#openai-api-demo)
+
+---
+
+
 ## Info
 
 This project pretends to show how to build a HTTP Proxy component that allows
@@ -53,26 +70,6 @@ docker run -p 443:443 -p 3128:3128 nginx-proxy
 
 
 ## Demos
-
-### Demo with js proxy implementation
-
-```bash
-
-# start an example web service (http://localhost:3000)
-yarn start:web-service
-
-# start the proxy (http://localhost:3128) - it will print out a valid access token
-yarn start:proxy
-
-# test endpoints
-curl -H "NVM-Authorization: Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..8xeTgS2rVxezo-VT6AYz7A.Aay2eFBnfsfwtWeZxBQyeFsdW9b3JfSv-ZFSnFU9s4XgxgZObGI9qf8cat4azkKB_0ZqisZAUNYQxYFL26wC3xYB_-XLb-w51OVsIf30LSwFEd3SGrzn-UORRcfXWb1qwVc52_qDmOgEmRCOonCP7CG98uRhIww1s0Ler_H_ELAVCmE7GKmjJGJlMSxX7I-p9ZYAsIn9oAtyVCZsmbfx-rmmrVhcko1lFIISKr4JXAeH3596eyK9hvFS1Om1ADz3B-S0xa2bO1TK3fxdhe8jT9r9fUEinF1Nhk8JBI6w1sGmpr5wevefOKyIMAixO8cvPzbDt8bF4BXQVme8WF66Fyloxzlbsw34ZbtonYLSgKI.7fk6xXWe4vzc9zitY8gJCw" http://127.0.0.1:3000 --proxy http://127.0.0.1:3128
-
-# test endpoint with query parameters
-curl -H "NVM-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJnZXQiOiJodHRwOi8vMTI3LjAuMC4xOjMwMDAiLCJpYXQiOjE2NzUyNTMxMTEsImV4cCI6MTY3NTI4MTkxMX0.zXYblmhQRDoTS-PnhImgDH8yFbjFoxjJVD46G0FdW1o" http://localhost:3000/sum?a=1&b=2 --proxy http://localhost:3128
-
-# not setting the authorization header should return a 401
-curl http://localhost:3000 --proxy http://localhost:3128
-```
 
 ### Demo with NGNIX Proxy
 
