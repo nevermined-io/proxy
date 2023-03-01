@@ -15,6 +15,7 @@ const NVM_AUTHORIZATION_HEADER = 'nvm-authorization'
 // The original full URL requested to the proxy will be included in a HTTP header with the following name
 const NVM_REQUESTED_URL_HEADER = 'nvm-requested-url'
 
+// Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy
 const JWT_SECRET_PHRASE = process.env.JWT_SECRET_PHRASE || '12345678901234567890123456789012'
 const JWT_SECRET = Uint8Array.from(JWT_SECRET_PHRASE.split("").map(x => parseInt(x)))
 

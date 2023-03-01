@@ -7,12 +7,12 @@
 
 ## Info
 
-This Proxy Proof of Concept (PoC) pretends to show how to build a HTTP Proxy component that allows
+This project pretends to show how to build a HTTP Proxy component that allows
 to gate-keep web services and make them available to external user via subscriptions.
 
 The proxy will leverage Nevermined core product to provide that functionality.
 
-This PoC will ask the following questions:
+This proxy will answer the following questions:
 
 - How can we gate-keep internal and/or external web services?
 - How can we provide access to these services using NFT susbcriptions?
@@ -20,7 +20,7 @@ This PoC will ask the following questions:
 - What is the architecture of the solution?
 - What would be a high-level estimation to include this solution as part of the core product?
 
-## PoC Requirements
+## Requirements
 
 The solution proposed or designed must take into account the following requirements:
 
@@ -32,33 +32,29 @@ The solution proposed or designed must take into account the following requireme
 The adoption of the end solution will be influenced by the requirements introduced to the users. The simpler and
 friction-less is the solution the better.
 
-## PoC Use Case
+## How to run the proxy
 
-To facilitate the understanding of the PoC and how is implemented we are gonna use two use cases.
-One of them using an internal web service (we operate and can control) and an external web service (running somewhere).
+### Environment variables
 
-### Internal Web Service
+The proxy uses the following environment variables:
 
-```
-As a Publisher I want to make available for free access to a service allowing to search accross all the assets published in my marketplace.
-This service is a HTTP REST API exposed will running in the following URL:
-HTTP POST http://marketplace.nevermined.localnet/api/v1/metadata/assets/ddo/query
-I don't want to expose any of the other webservice endpoints like
-HTTP GET http://marketplace.nevermined.localnet/api/v1/metadata/assets
+* `SERVER_HOST` - The host used by the Oauth Server. By default and the recommended configuration is to use `127.0.0.1` so only the proxy process (NGINX) can connect to the local OAuth instrospection server.
+* `SERVER_PORT` - The port used by the OAuth server. By default is `4000`. This port in normal configurations will be **internal** so won't be exposed and only will be accesible by the proxy process.
+* `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy.
 
-As a Client I want to get access to the search API of the marketplace.
-```
+### Running the NGINX proxy via Docker
 
-### External Web Service, tokenizing Twitter API
+It will not have visibility to the web service running in localhost:3000, but allows to connect to remote apis like the one of OpenAI:
 
 ```
-As a Publisher I want to make available my Twitter API allowing others to send messages under my account. I will make this available for 1 week
-for a price of 1 MATIC.
-
-As a Client I want to send messages throgh the Twitter API.
+docker build . -t nginx-proxy
+docker run -p 443:443 -p 3128:3128 nginx-proxy
 ```
 
-## Demo with js proxy implementation
+
+## Demos
+
+### Demo with js proxy implementation
 
 ```bash
 
@@ -78,7 +74,7 @@ curl -H "NVM-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0YXJn
 curl http://localhost:3000 --proxy http://localhost:3128
 ```
 
-## Demo with NGNIX Proxy
+### Demo with NGNIX Proxy
 
 It requires a NGNIX proxy with `auth_request` and `njs` modules
 
@@ -121,12 +117,12 @@ Unauthorized!!!!
 
 ```
 
-## OpenAI API demo
+### OpenAI API demo
 
 Assuming we have NGINX already running from the previous demo:
 
 ```bash
-export OPENAI_API_KEY="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"
+export OPENAI_API_KEY="YOUR OPENAI API KEY"
 export SERVICE_ENDPOINT="https://api.openai.com/v1/completions"
 
 ## We need this 2 if we want to use the SDK test
@@ -161,14 +157,4 @@ curl -k -v -H "Content-Type: application/json"  -H "NVM-Authorization: Bearer $N
 {"id":"cmpl-6kc2PI82Y2OzdvOoqNDH00m6DrXDn","object":"text_completion","created":1676567325,"model":"text-davinci-003","choices":[{"text":"\n\nThis is indeed a test","index":0,"logprobs":null,"finish_reason":"length"}],"usage":{"prompt_tokens":5,"completion_tokens":7,"total_tokens":12}}
 
 ...
-```
-
-
-### Running the NGINX proxy via Docker
-
-It will not have visibility to the web service running in localhost:3000, but allows to connect to remote apis like the one of OpenAI:
-
-```
-docker build . -t nginx-proxy
-docker run -p 443:443 -p 3128:3128 nginx-proxy
 ```
