@@ -65,7 +65,7 @@ It will not have visibility to the web service running in localhost:3000, but al
 
 ```
 docker build . -t nginx-proxy
-docker run -p 443:443 -p 3128:3128 nginx-proxy
+docker run -v $(pwd)/conf/certs:/ssl/certs -p 443:443 -p 3128:3128 nginx-proxy
 ```
 
 
