@@ -57,8 +57,18 @@ app.post('/introspect', async (req, res) => {
       return
     }
 
+    console.log(`JWT PAYLOAD = ${JSON.stringify(payload)}`)
+
     // 2. The URL requested is granted
-    const url = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
+    var url
+    try {
+      url = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
+    } catch (err) {
+      console.error(err)
+      res.writeHead(401)
+      res.end()
+      return
+    }    
   
     let urlMatches = false
     payload.endpoints.map( e => {
@@ -81,13 +91,7 @@ app.post('/introspect', async (req, res) => {
     }    
 
     // Getting the access token from the JWT message
-    let serviceToken = ''
-    for (let index = 0; index < payload.headers.length; index++) {
-      if (payload.headers[index]['authorization']) {
-        const tokens = payload.headers[index]['authorization'].split(' ')
-        serviceToken = tokens.length > 1 ? tokens[1] : tokens[0]
-      }
-    }
+    const serviceToken = payload.headers!.authentication!.token || '' 
 
     const response = {
       "active": true,
