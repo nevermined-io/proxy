@@ -1,0 +1,16 @@
+FROM node:16-alpine
+LABEL maintainer="Nevermined <root@nevermined.io>"
+
+EXPOSE 4000
+
+RUN apk add --no-cache autoconf automake alpine-sdk bash
+
+# Preparing OAuth Server
+COPY package.json ./
+COPY tsconfig* ./
+COPY src ./src
+
+RUN yarn 
+RUN yarn build
+
+ENTRYPOINT [ "yarn", "run", "start:oauth-server " ]
