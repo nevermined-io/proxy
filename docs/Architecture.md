@@ -71,7 +71,7 @@ The standard method for validating access tokens with an IdP is called token int
 
 ![NGINX Integration](images/ARCH_Nginx_integration.png)
 
-For the PoC we used 2 approaches, one using a bespoke proxy and another one using NGINX as reverse proxy. Using NGINX is more suitable for production environments because can protect more effectively the instrospection requests, that are delegated to the OAuth Instrospection server. That server has been implemented in Javascript and performs the JWT - JWE decryption, validation of the urls requested, and return of the authorization token required by the end web service to authorize the user request.
+For the PoC we used 2 approaches, one using a bespoke proxy and another one using NGINX as reverse proxy. Using NGINX is more suitable for production environments because can protect more effectively the introspection requests, that are delegated to the OAuth Introspection server. That server has been implemented in Javascript and performs the JWT - JWE decryption, validation of the urls requested, and return of the authorization token required by the end web service to authorize the user request.
 
 
 ## Securing web services

@@ -55,19 +55,34 @@ friction-less is the solution the better.
 
 The proxy uses the following environment variables:
 
-* `SERVER_HOST` - The host used by the Oauth Server. By default and the recommended configuration is to use `127.0.0.1` so only the proxy process (NGINX) can connect to the local OAuth instrospection server.
+* `SERVER_HOST` - The host used by the Oauth Server. By default and the recommended configuration is to use `127.0.0.1` so only the proxy process (NGINX) can connect to the local OAuth introspection server.
 * `SERVER_PORT` - The port used by the OAuth server. By default is `4000`. This port in normal configurations will be **internal** so won't be exposed and only will be accesible by the proxy process.
 * `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy.
 
 ### Running the NGINX proxy via Docker
 
-It will not have visibility to the web service running in localhost:3000, but allows to connect to remote apis like the one of OpenAI:
+The OAuth Server accepts the following environment variables:
+
+* `SERVER_HOST` - The host or address the OAuth server will be listen. By default `127.0.0.1` but if you need to configure from out of the server/pod it can be `0.0.0.0`
+* `SERVER_PORT` - Port the OAuth server will be listening. It is `4000` by default
+* `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy
+
+The NGINX container accepts the following environment variables:
+
+* `INTROSPECTION_URL` - The url to call to perform the OAuth introspection. It is the URL to the OAuth server. By default `http://127.0.0.1:4000/introspect`
+
+The project has 3 Docker containers:
+
+* `nevermined-io/proxy:latest` - It bundles the NGINX and OAuth server in the same image
+* `neverminedio/proxy:nginx-latest` - NGINX 
+* `neverminedio/proxy:oauth-latest` - The OAuth server
+
+You can build it locally too and run it:
 
 ```
 docker build . -t nginx-proxy
-docker run -v $(pwd)/conf/certs:/ssl/certs -p 443:443 -p 3128:3128 nginx-proxy
+docker run -v $(pwd)/conf/certs:/ssl/certs -p 443:443 -p 3128:3128  -e "INTROSPECTION_URL=http://127.0.0.1:4000" nginx-proxy
 ```
-
 
 ## Demos
 
@@ -89,7 +104,7 @@ yarn build
 # Start the web service
 yarn run start:web-service
 
-# Start the Oauth instrospection server
+# Start the Oauth introspection server
 yarn run start:oauth-server
 
 # Start NGINX
