@@ -4,8 +4,12 @@ LABEL maintainer="Nevermined <root@nevermined.io>"
 EXPOSE 3128 
 EXPOSE 443
 
+# Nginx environment variables
+ENV INTROSPECTION_URL "http://127.0.0.1:4000/introspect"
+
 RUN apk update && apk upgrade && \
     apk add --no-cache --virtual .build-deps \
+    nginx-mod-http-perl \
     curl \
     bash
 
@@ -15,4 +19,5 @@ COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY conf/nginx/proxy.conf /etc/nginx/sites-enabled/proxy.conf
 COPY conf/nginx/oauth2.js /etc/nginx/conf.d/oauth2.js
 
-ENTRYPOINT [ "nginx" ]
+CMD ["nginx", "-g", "daemon off;"]
+

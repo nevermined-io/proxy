@@ -4,8 +4,17 @@ LABEL maintainer="Nevermined <root@nevermined.io>"
 EXPOSE 3128 
 EXPOSE 443
 
+# OAuth Server environment variables
+ENV SERVER_HOST "127.0.0.1"
+ENV SERVER_PORT "4000"
+ENV JWT_SECRET_PHRASE "12345678901234567890123456789012"
+
+# Nginx environment variables
+ENV INTROSPECTION_URL "http://127.0.0.1:4000/introspect"
+
 RUN apk update && apk upgrade && \
     apk add --no-cache --virtual .build-deps \
+    nginx-mod-http-perl \
     curl \
     bash \
     nodejs-current \
