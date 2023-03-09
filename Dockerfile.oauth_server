@@ -1,13 +1,6 @@
 FROM node:16-alpine
 LABEL maintainer="Nevermined <root@nevermined.io>"
 
-EXPOSE 4000
-
-# OAuth Server environment variables
-ENV SERVER_HOST "127.0.0.1"
-ENV SERVER_PORT "4000"
-ENV JWT_SECRET_PHRASE "12345678901234567890123456789012"
-
 RUN apk add --no-cache autoconf automake alpine-sdk bash
 
 # Preparing OAuth Server
