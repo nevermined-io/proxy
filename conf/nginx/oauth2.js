@@ -15,6 +15,8 @@
  */
 
 function introspectAccessToken(r) {
+    r.log("OAuth sending introspection: ")
+    r.log(" token: " + JSON.stringify(r))
     r.subrequest("/_oauth2_send_introspection_request",
         function(reply) {
             r.log(`Reply: ${JSON.stringify(reply)}`);
