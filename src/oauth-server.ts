@@ -68,8 +68,7 @@ app.post('/introspect', async (req, res) => {
         endpoint = new URL(e)        
         const fn = match(endpoint.pathname, { decode: decodeURIComponent })
         
-        if (urlRequested.hostname === endpoint.hostname && 
-          fn(urlRequested.pathname))  {          
+        if (fn(urlRequested.pathname))  {          
             urlMatches = true            
           }
       } catch (error) {
