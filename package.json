@@ -1,6 +1,6 @@
 {
   "name": "proxy-poc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
@@ -16,6 +16,7 @@
     "http-proxy": "^1.18.1",
     "jose": "^4.5.1",
     "jsonwebtoken": "^9.0.0",
+    "path-to-regexp": "^6.2.1",
     "typescript": "~4.9.5"
   }, 
   "devDependencies": {

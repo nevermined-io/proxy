@@ -120,7 +120,7 @@ yarn run integration:external
 export NVM_TOKEN="eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..hI4CMYSs0tqFYdof4hFiUw.2jK41Lgpua6XKZtFvqwjQS3gJDbSs0DVDMNnSW55NVOKVqQqBA1RE2InYpUY3aVJsqdsQ1nT5KpNH-MfwCyk85paoMSTiuHOW1t0bN8dB7PwyMkM5Ubf-8bg3q3rIEpDT7QtQ2M7YbP1t3HL8jhJZDStJ_2AYnumUvCVmKDtPUe_FmVdPcW66ta-d3YWKXkwKN1Ajrdnlsav58f-u6wE-qck_UtzqMpOI1ePmK3I-FBTYtSnpyUZrQu3XOXV2TR23kKaUtclhSdtHSMQHug__5Oe2Ibo3QI0AauThAHD6q98BL3iZn9fH2aCsUP2uFifRc0kC2PrWCz1F1upmaKWg2oJ9Yh9YADA95mcOjH_KSM.7tYdcSQ-AS9zdROBRUOh1g"
 
 # Make a HTTP request to the webservice using NGINX as proxy
-curl -vvv -k --proxy-insecure -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:3128 -H "NVM-Authorization: Bearer $NVM_TOKEN"
+curl -vvv -k --proxy-insecure -X GET http://127.0.0.1:3000 --proxy http://127.0.0.1:3128 -H "Authorization: Bearer $NVM_TOKEN"
 Hello World!
 
 # Making a request directly to the endpoint should fail
@@ -163,7 +163,7 @@ We can also see this working with curl, copy the "Access Token" from the previou
 export NVM_TOKEN="eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..1LYqALYanLBQPmsMvPP0ug.For0wiUUMVUAxB6vvhhSjCjSucfb8dgf5pz3v-YJPxiDZ5QMr7oB5ShSUh9OErlDShmqumd-rWRcqfXuns7R6FvDMC457jTZe6P2YyFZ_rsU3TLBiv6cyF7Br3B-wshZIaG_MiKoCZqZQJXtIbZhIx4TXdtJc7yKLSRkMP_-kSMROLKlrKuwWuLow6_5G-aOyqJkU0CdZJ-iEY42eh4L0YYALZ3LZlDII-Wv45pPm6Yki3DcgCYfpZ7zSEHJpoSXm3wCB4FJ7enKPxQ02ViRMwwJldvQzrPO2XMbGAmg7OVxMN2iI6PaenUQSO76toX04cgsEnEimKUOifY0Gl_MBBFr4R0AAoCdCW7Jxxq0VBsy1H8qVRb29rR2Ql2IRmOX.1ZN258dHRBHZewKNDhwFbQ"
 
 
-curl -k -v -H "Content-Type: application/json"  -H "NVM-Authorization: Bearer $NVM_TOKEN" -d "$REQUEST_DATA" -H "Host: api.openai.com" https://127.0.0.1:443/v1/completions
+curl -k -v -H "Content-Type: application/json"  -H "Authorization: Bearer $NVM_TOKEN" -d "$REQUEST_DATA" -H "Host: api.openai.com" https://127.0.0.1:443/v1/completions
 
 ...
 {"id":"cmpl-6kc2PI82Y2OzdvOoqNDH00m6DrXDn","object":"text_completion","created":1676567325,"model":"text-davinci-003","choices":[{"text":"\n\nThis is indeed a test","index":0,"logprobs":null,"finish_reason":"length"}],"usage":{"prompt_tokens":5,"completion_tokens":7,"total_tokens":12}}
