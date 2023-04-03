@@ -1,8 +1,15 @@
 {
-  "name": "proxy-poc",
+  "name": "proxy",
+  "description": "Nevermined Proxy to gatekeep access to the remote web services",
   "version": "0.2.0",
   "main": "index.js",
-  "license": "MIT",
+  "keywords": [],
+  "author": "Nevermined <root@nevermined.io>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nevermined-io/proxy.git"
+  },
   "scripts": {
     "clean": "rm -rf ./dist/ ./doc/ ./.nyc_output",
     "prebuild": "rm -rf ./dist && mkdir ./dist ",
