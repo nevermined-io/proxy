@@ -65,19 +65,11 @@ app.post('/introspect', async (req, res) => {
     let urlMatches = false
     payload.endpoints.map( e => {
       try {
-        endpoint = new URL(e)
-        console.log(`Endpoint: ${JSON.stringify(endpoint)}`)
-        console.log(`Requested: ${JSON.stringify(urlRequested)}`)
-
-        console.log(`DDO Endpoint: ${endpoint.pathname}`)
-        console.log(`Requested URL: ${urlRequested.pathname}`)
+        endpoint = new URL(e)        
         const fn = match(endpoint.pathname, { decode: decodeURIComponent })
-        console.log(`Match: ${JSON.stringify(fn(urlRequested.pathname))}`)
-
         
         if (urlRequested.hostname === endpoint.hostname && 
-          fn(urlRequested.pathname))  {
-          // url.pathname === endpoint.pathname) {
+          fn(urlRequested.pathname))  {          
             urlMatches = true            
           }
       } catch (error) {
