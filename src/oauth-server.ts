@@ -1,5 +1,6 @@
 import express from 'express'
 import { jwtDecrypt } from 'jose'
+import { match } from 'path-to-regexp'
 
 const app = express()
 
@@ -10,7 +11,7 @@ const SERVER_HOST = process.env.SERVER_HOST || '127.0.0.1'
 const SERVER_PORT = process.env.SERVER_PORT || 4000
 
 // The HTTP header name including the authorization token
-const NVM_AUTHORIZATION_HEADER = 'nvm-authorization'
+const NVM_AUTHORIZATION_HEADER = 'authorization' // 'nvm-authorization'
 
 // The original full URL requested to the proxy will be included in a HTTP header with the following name
 const NVM_REQUESTED_URL_HEADER = 'nvm-requested-url'
@@ -58,23 +59,34 @@ app.post('/introspect', async (req, res) => {
     }
 
     // 2. The URL requested is granted
-    const url = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
-  
+    const urlRequested = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
+    let endpoint
+
     let urlMatches = false
     payload.endpoints.map( e => {
       try {
-        const endpoint = new URL(e)
-        if (url.hostname === endpoint.hostname && 
-          url.pathname === endpoint.pathname) {
+        endpoint = new URL(e)
+        console.log(`Endpoint: ${JSON.stringify(endpoint)}`)
+        console.log(`Requested: ${JSON.stringify(urlRequested)}`)
+
+        console.log(`DDO Endpoint: ${endpoint.pathname}`)
+        console.log(`Requested URL: ${urlRequested.pathname}`)
+        const fn = match(endpoint.pathname, { decode: decodeURIComponent })
+        console.log(`Match: ${JSON.stringify(fn(urlRequested.pathname))}`)
+
+        
+        if (urlRequested.hostname === endpoint.hostname && 
+          fn(urlRequested.pathname))  {
+          // url.pathname === endpoint.pathname) {
             urlMatches = true            
           }
       } catch (error) {
-        console.log(`Error parsing url`)
+        console.log(`Error parsing url ${(error as Error).message}`)
       }      
     })
   
     if (!urlMatches)  {
-      console.log(`${url.origin} not in ${payload.endpoints}`)
+      console.log(`${urlRequested.origin} not in ${payload.endpoints}`)
       res.writeHead(401)
       res.end()
       return
@@ -92,7 +104,8 @@ app.post('/introspect', async (req, res) => {
     const response = {
       "active": true,
       "user_id": payload.userId,
-      "service_token": serviceToken,      
+      "service_token": serviceToken,
+      "upstream_host": endpoint.hostname,
       "scope": payload.did,
       "exp": payload.exp,
       "iat": payload.iat
