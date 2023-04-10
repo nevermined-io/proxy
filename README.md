@@ -12,12 +12,13 @@
 - [Nevermined Proxy](#nevermined-proxy)
   - [Table of Contents](#table-of-contents)
   - [Info](#info)
-  - [How to run the proxy](#how-to-run-the-proxy)
+  - [How to run the Proxy](#how-to-run-the-proxy)
     - [Environment variables](#environment-variables)
-    - [Running the NGINX proxy via Docker](#running-the-nginx-proxy-via-docker)
+    - [Running the NGINX Proxy via Docker](#running-the-nginx-proxy-via-docker)
   - [Demos](#demos)
     - [Demo using a standalone NGNIX](#demo-using-a-standalone-ngnix)
     - [OpenAI API demo](#openai-api-demo)
+  - [External references](#external-references)
 
 
 ## Info
@@ -38,7 +39,7 @@ The proxy implementation combines with Nevermined providing the final piece to a
 
 You can find the technical details at the [architecture documentation](docs/README.md) of the proxy, or in the [user flows documentation](docs/UserFlows.md).
 
-## How to run the proxy
+## How to run the Proxy
 
 ### Environment variables
 
@@ -48,7 +49,7 @@ The proxy uses the following environment variables:
 * `SERVER_PORT` - The port used by the OAuth server. By default is `4000`. This port in normal configurations will be **internal** so won't be exposed and only will be accesible by the proxy process.
 * `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy.
 
-### Running the NGINX proxy via Docker
+### Running the NGINX Proxy via Docker
 
 The OAuth Server accepts the following environment variables:
 
@@ -159,3 +160,9 @@ curl -k -v -H "Content-Type: application/json"  -H "Authorization: Bearer $NVM_T
 
 ...
 ```
+
+## External references
+
+* [Bringing online subscriptions into Web3 with NFTs](https://medium.com/nevermined-io/bringing-online-subscriptions-into-web3-with-nfts-5fc2e9570122)
+* [NFTs are dead. Long live NFTs!](https://medium.com/nevermined-io/nfts-are-dead-long-live-nfts-7a98ecb629d6)
+* [Facilitating asset tokenization with NFTs](https://medium.com/nevermined-io/facilitating-asset-tokenization-with-nfts-3f725bfd51e2)
