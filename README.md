@@ -36,6 +36,8 @@ The proxy implementation combines with Nevermined providing the final piece to a
 - What are the flows that need to be supported?
 - What is the architecture of the solution?
 
+You can find the technical details at the [architecture documentation](docs/README.md) of the proxy, or in the [user flows documentation](docs/UserFlows.md).
+
 ## How to run the proxy
 
 ### Environment variables

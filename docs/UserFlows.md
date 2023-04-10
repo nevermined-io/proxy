@@ -1,10 +1,10 @@
 # User Flows
 
-This page describes the potential user flows required to implement the end to end interactions of the PoC.
+This page describes the potential user flows required to implement the end to end interactions of the Nevermined Proxy.
 
 ## Actors
 
-We use the following actors in the PoC:
+We use the following actors:
 
 * The Service Owner or **Publisher**. This actors owns/control a web service and wants to make it available under some 
   conditions (payment) to the rest of the world.
