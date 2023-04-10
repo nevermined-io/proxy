@@ -1,3 +1,7 @@
+---
+sidebar_position: 4
+---
+
 # User Flows
 
 This page describes the potential user flows required to implement the end to end interactions of the Nevermined Proxy.

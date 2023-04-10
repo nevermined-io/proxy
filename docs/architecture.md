@@ -1,8 +1,13 @@
+---
+sidebar_position: 3
+---
+
+
 # Solution Architecture
 
 This page describes how the tokenization of web services via Nevermined NFTs can be implemented.
 
-This architecture is defined to implement the [use case and flows described in the documentation](UserFlows.md).
+This architecture is defined to implement the [use case and flows described in the documentation](user-flows.md).
 
 ## Nevermined Assets
 
