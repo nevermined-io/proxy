@@ -1,5 +1,5 @@
 {
-  "name": "proxy",
+  "name": "@nevermined-io/proxy",
   "description": "Nevermined Proxy to gatekeep access to the remote web services",
   "version": "0.2.0",
   "main": "index.js",
@@ -10,6 +10,10 @@
     "type": "git",
     "url": "git+https://github.com/nevermined-io/proxy.git"
   },
+  "bugs": {
+    "url": "https://github.com/nevermined-io/proxy/issues"
+  },
+  "homepage": "https://github.com/nevermined-io/proxy#readme",  
   "scripts": {
     "clean": "rm -rf ./dist/ ./doc/ ./.nyc_output",
     "prebuild": "rm -rf ./dist && mkdir ./dist ",
