@@ -31,7 +31,7 @@ jobs:
           BRANCH_TO_CLONE: main
           REPO_TO_PUSH: docs
           PATH_TO_COPY: ./proxy/docs/
-          PATH_TO_PUSH: docs/proxy
+          PATH_TO_PUSH: docs/architecture/components/proxy
           REPOSITORY_NAME: ${{ github.repository }}
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         run: |
