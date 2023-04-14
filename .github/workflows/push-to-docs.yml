@@ -9,14 +9,13 @@ jobs:
   push-to-docs:
     runs-on: ubuntu-latest
     steps:
-      # checkout the sdk and build the docs
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           token: ${{ secrets.API_TOKEN_GITHUB }}
-          path: sdk
-      - name: Install sdk dependencies
+          path: proxy
+      - name: Install proxy dependencies
         working-directory: ./proxy
         run: yarn
       - name: Generate docs
@@ -30,7 +29,7 @@ jobs:
           token: ${{ secrets.API_TOKEN_GITHUB }}
           repository: nevermined-io/docs
           path: docs
-      - name: Copy the sdk docs
+      - name: Copy the proxy docs
         run: cp -r ./proxy/docs ./docs/docs/proxy
       - name: Test nvm-docs build
         working-directory: ./docs
@@ -38,9 +37,9 @@ jobs:
           yarn
           yarn build
 
-      # commit the new generated docs to the sdk repo
-      - name: Commit sdk docs
-        working-directory: ./sdk
+      # commit the new generated docs to the proxy repo
+      - name: Commit proxy docs
+        working-directory: ./proxy
         run: |
           git config --global user.email "devops@nevermined.io"
           git config --global user.name "Nevermined BOT"
