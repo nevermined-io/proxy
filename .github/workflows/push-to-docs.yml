@@ -19,10 +19,11 @@ jobs:
       - name: Install sdk dependencies
         working-directory: ./proxy
         run: yarn
-      - name: Generate docs
-        working-directory: ./proxy
-        run: yarn docs
+      # - name: Generate docs
+      #   working-directory: ./proxy
+      #   run: yarn docs
 
+<<<<<<< Updated upstream
       # checkout nvm-docs and test the build with the new documentation
       - name: Checkout docs
         uses: actions/checkout@v3
@@ -47,6 +48,32 @@ jobs:
           git add ./docs
           git commit -m "Updating documentation [skip actions]"
           git push
+=======
+      # # checkout nvm-docs and test the build with the new documentation
+      # - name: Checkout docs
+      #   uses: actions/checkout@v3
+      #   with:
+      #     token: ${{ secrets.API_TOKEN_GITHUB }}
+      #     repository: nevermined-io/docs
+      #     path: docs
+      # - name: Copy the proxy docs
+      #   run: cp -r ./proxy/docs ./docs/docs/proxy
+      # - name: Test nvm-docs build
+      #   working-directory: ./docs
+      #   run: |
+      #     yarn
+      #     yarn build
+
+      # # commit the new generated docs to the proxy repo
+      # - name: Commit proxy docs
+      #   working-directory: ./proxy
+      #   run: |
+      #     git config --global user.email "devops@nevermined.io"
+      #     git config --global user.name "Nevermined BOT"
+      #     git add ./docs
+      #     git commit -m "Updating documentation [skip actions]"
+      #     git push
+>>>>>>> Stashed changes
 
       # push to docs repo
       - name: Install envsubst
