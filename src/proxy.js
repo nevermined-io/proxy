@@ -2,7 +2,7 @@
 // To do a full test please use the NGINX proxy implementation found in this repo.
 
 var http = require('http'),
-    httpProxy = require('http-proxy');
+    httpProxy = require('http-proxy')
     jwt = require('jsonwebtoken')
 
 
@@ -17,7 +17,7 @@ var token = jwt.sign(
 )
 console.log('Access token:\n\n', token)
  
-var proxy = httpProxy.createProxyServer({});
+var proxy = httpProxy.createProxyServer({})
  
 var server = http.createServer(function(req, res) {
 
@@ -36,8 +36,8 @@ var server = http.createServer(function(req, res) {
     return
   }
   
-  proxy.web(req, res, { target: decoded.target });
-});
+  proxy.web(req, res, { target: decoded.target })
+})
  
 console.log("listening on port 3001")
-server.listen(3001);
+server.listen(3001)

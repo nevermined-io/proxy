@@ -1,7 +1,7 @@
 {
   "name": "@nevermined-io/proxy",
   "description": "Nevermined Proxy to gatekeep access to the remote web services",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "index.js",
   "keywords": [],
   "author": "Nevermined <root@nevermined.io>",
@@ -18,19 +18,33 @@
     "clean": "rm -rf ./dist/ ./doc/ ./.nyc_output",
     "prebuild": "rm -rf ./dist && mkdir ./dist ",
     "build": "tsc",
+    "lint": "eslint ./",
+    "lint:fix": "eslint ./ --fix",
     "start:web-service": "node dist/src/web-service.js",
     "start:proxy": "node src/proxy.js",
     "start:oauth-server": "node dist/src/oauth-server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "@nevermined-io/sdk": "1.4.2-rc1",
+    "pino": "^6.10.0",
     "http-proxy": "^1.18.1",
     "jose": "^4.5.1",
     "jsonwebtoken": "^9.0.0",
-    "path-to-regexp": "^6.2.1",
+    "path-to-regexp": "^6.2.1",    
     "typescript": "~4.9.5"
   }, 
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
+    "eslint": "^8.19.0",
+    "eslint-config-nevermined": "^0.2.0",
+    "eslint-config-next": "^12.3.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-mdx": "^2.0.2",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-tsdoc": "^0.2.16",
     "@types/node": "~18.13.0"
   }
 }

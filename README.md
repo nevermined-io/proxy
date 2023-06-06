@@ -48,6 +48,7 @@ The proxy uses the following environment variables:
 * `SERVER_HOST` - The host used by the Oauth Server. By default and the recommended configuration is to use `127.0.0.1` so only the proxy process (NGINX) can connect to the local OAuth introspection server.
 * `SERVER_PORT` - The port used by the OAuth server. By default is `4000`. This port in normal configurations will be **internal** so won't be exposed and only will be accesible by the proxy process.
 * `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy.
+* `MARKETPLACE_API_URI` - The url to the marketplace api of the environment
 
 ### Running the NGINX Proxy via Docker
 
