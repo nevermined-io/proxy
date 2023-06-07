@@ -168,7 +168,6 @@ app.post('/introspect', async (req, res) => {
         if (metadata.attributes.main.webService?.openEndpoints) {
           logger.trace(`Trying to match endpoints with ${urlRequested}`)
           scope = ddo.id
-          //const ddoOpenEndpoints = metadata.attributes.main.webService?.openEndpoints.map( e => `(.*)${e}`)
           const { urlMatching } = urlMatches(metadata.attributes.main.webService?.openEndpoints, urlRequested)
           if (urlMatching) {
             matches = true
