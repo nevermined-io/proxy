@@ -1,8 +1,15 @@
+import { DDO, DID } from '@nevermined-io/sdk'
 import express from 'express'
 import { jwtDecrypt } from 'jose'
 import { match } from 'path-to-regexp'
+import fetch from 'node-fetch'
 
 const app = express()
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const logger = require('pino')({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+})
 
 // By default we only listen into localhost
 // The proxy server will connect from the same host so we protect the oauth server
@@ -20,12 +27,60 @@ const NVM_REQUESTED_URL_HEADER = 'nvm-requested-url'
 const JWT_SECRET_PHRASE = process.env.JWT_SECRET_PHRASE || '12345678901234567890123456789012'
 const JWT_SECRET = Uint8Array.from(JWT_SECRET_PHRASE.split("").map(x => parseInt(x)))
 
+const MARKETPLACE_API_URI = process.env.MARKETPLACE_API_URI || 'https://marketplace.nevermined.localnet'
+
+// Required because we are dealing with self signed certificates locally
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 
 const validateAuthorization = async (authorizationHeader) => {
   const tokens = authorizationHeader.split(' ') 
   const accessToken = tokens.length > 1 ? tokens[1] : tokens[0]
   const { payload } = await jwtDecrypt(accessToken, JWT_SECRET)
 
+  return payload
+}
+
+const urlMatches = (endpoints: string[], urlRequested: URL): { matches: boolean, urlMatching : URL | undefined } =>  {
+  let matches = false
+  let urlMatching = undefined
+  endpoints.forEach( e => {
+    try {      
+      const endpoint = new URL(e)      
+      logger.trace(`Matching endpoint ${endpoint.pathname} with requestedUrl ${urlRequested.pathname} `)
+      const fn = match(endpoint.pathname, { decode: decodeURIComponent })
+      
+      if (fn(urlRequested.pathname))  {
+          logger.trace(`Match found`)          
+          matches = true
+          urlMatching = endpoint
+      }
+    } catch (error) {
+      throw new Error(`Error parsing url ${(error as Error).message}`)
+    }      
+  })
+  return { matches, urlMatching }
+}
+
+const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
+
+  let payload
+
+  try {
+    payload = await validateAuthorization(userJwt)
+  } catch (err) {
+    throw new Error(`Invalid authorization token: ${(err as Error).message}`)
+  }
+
+  // 2. The URL requested is granted
+  
+  logger.debug(`JWT Validating endpoints ${JSON.stringify(payload.endpoints)}}`)
+  const { matches, urlMatching } = urlMatches(payload.endpoints, urlRequested)
+  if (!matches)  {
+    throw new Error(`${urlRequested.origin} not in ${payload.endpoints}`)
+  }  
+
+  payload.hostname = urlMatching.hostname
   return payload
 }
 
@@ -36,75 +91,117 @@ app.get('/', (req, res) => {
 
 app.post('/introspect', async (req, res) => {
 
-    console.log(`Request --------`)
-    console.log(` Headers: ${JSON.stringify(req.headers)}`)   
+    logger.trace(` Headers: ${JSON.stringify(req.headers)}`)   
 
-    // Validation Steps:
-    // 1. The Authorization is there, can be decripted and is valid
-    if (!req.headers[NVM_AUTHORIZATION_HEADER]) {
-      console.log(`${NVM_AUTHORIZATION_HEADER} header not found`)
-      res.writeHead(401)
-      res.end()
-      return      
-    }
-
-    let payload
-    try {
-      payload = await validateAuthorization(req.headers[NVM_AUTHORIZATION_HEADER])
-    } catch (err) {
-      console.error(err)
-      res.writeHead(401)
-      res.end()
-      return
-    }
-
-    // 2. The URL requested is granted
     const urlRequested = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
-    let endpoint
+    logger.debug(`URL Requested: ${urlRequested}`)
 
-    let urlMatches = false
-    payload.endpoints.map( e => {
-      try {
-        endpoint = new URL(e)        
-        const fn = match(endpoint.pathname, { decode: decodeURIComponent })
-        
-        if (fn(urlRequested.pathname))  {          
-            urlMatches = true            
-          }
-      } catch (error) {
-        console.log(`Error parsing url ${(error as Error).message}`)
-      }      
-    })
-  
-    if (!urlMatches)  {
-      console.log(`${urlRequested.origin} not in ${payload.endpoints}`)
-      res.writeHead(401)
-      res.end()
-      return
-    }    
-
-    // Getting the access token from the JWT message
-    let serviceToken = ''    
     try {
-      serviceToken = payload.headers.authentication.token ?? ''
-    } catch (error) {
-      console.log(`Authentication token not found, service_token will be empty`)
-    } 
-    
 
-    const response = {
-      "active": true,
-      "user_id": payload.userId,
-      "service_token": serviceToken,
-      "upstream_host": endpoint.hostname,
-      "scope": payload.did,
-      "exp": payload.exp,
-      "iat": payload.iat
+      if (req.headers[NVM_AUTHORIZATION_HEADER]) {
+        const userJwt = req.headers[NVM_AUTHORIZATION_HEADER]
+        
+        logger.debug(`JWT: ${userJwt}`)
+        const payload = await getJwtPayload(userJwt, urlRequested)
+        // Compose authorized response
+        // Getting the access token from the JWT message
+        let serviceToken = ''    
+        try {
+          serviceToken = payload.headers.authentication.token ?? ''
+        } catch (error) {
+          logger.debug(`Authentication token not found, service_token will be empty`)
+        } 
+        
+        const response = {
+          "active": true,
+          "user_id": payload.userId,
+          "service_token": serviceToken,
+          "upstream_host": payload.hostname,
+          "scope": payload.did,
+          "exp": payload.exp,
+          "iat": payload.iat
+        }
+        logger.debug(`RESPONSE:\n${JSON.stringify(response)}`)
+        res.send(response)
+        return
+
+      } else {
+        logger.debug(`No ${NVM_AUTHORIZATION_HEADER} header found`)
+      }      
+
+    } catch (error) {
+      logger.warn(`${error as Error}`)
+    }  
+
+    // If the user didn't provide a JWT or the request was not approved 
+    // we check if the asset DID is provided as a subdomain. 
+    // If so we resolve the NVM Asset via the DID and check:
+    // 1. The DID is valid and resolves into a DDO
+    // 2. The DDO is related to a web-service
+    // 3. The web service includes open urls
+    // 4. The URL requested is part of the open urls list
+    // If any of this steps fail we return an error response (401)
+
+    let matches = false
+    let scope = ''
+    let upstreamHost = ''
+    try {
+      const subdomain = urlRequested.hostname.split('.')[0]
+      logger.debug(`Subdomain: ${subdomain}`)
+
+      const did = DID.fromEncoded(subdomain)
+      logger.debug(`DID: ${did.getDid()}`)      
+
+      if (did.getId().length === 64) {
+
+        const assetUrl = `${MARKETPLACE_API_URI}/api/v1/metadata/assets/ddo/${did.getDid()}`
+        logger.debug(`Asset URL: ${assetUrl}`)
+
+        const response = await fetch(assetUrl)
+        logger.trace(`Response Status: ${response.status}`)
+
+        const ddo = DDO.deserialize(await response.text())
+        
+        const metadata = ddo.findServiceByType('metadata')
+        logger.trace(JSON.stringify(metadata.attributes.main.webService))
+
+        if (metadata.attributes.main.webService?.openEndpoints) {
+          logger.trace(`Trying to match endpoints with ${urlRequested}`)
+          scope = ddo.id
+          const { urlMatching } = urlMatches(metadata.attributes.main.webService?.openEndpoints, urlRequested)
+          if (urlMatching) {
+            matches = true
+            upstreamHost = urlMatching.hostname
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn(`${error as Error}`)
     }
-    console.log(`RESPONSE:\n${JSON.stringify(response)}`)
-    res.send(response)
+
+    if (matches)  {
+      const response = {
+        "active": true,
+        "user_id": "",
+        "service_token": "",
+        "upstream_host": upstreamHost,
+        "scope": scope,
+        "exp": "",
+        "iat": ""
+      }
+      logger.debug(`OPEN URL RESPONSE:\n${JSON.stringify(response)}`)
+      res.send(response)
+      return    
+    } 
+
+    // Error response
+    res.writeHead(401)
+    res.end()
+    return
 })
 
 app.listen(SERVER_PORT, SERVER_HOST, () => {
-  console.log(`OAuth server listening on port ${SERVER_PORT}`)
+  logger.info(`OAuth server listening on port ${SERVER_PORT}`)
 })
+
+

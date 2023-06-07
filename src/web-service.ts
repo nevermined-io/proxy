@@ -23,10 +23,18 @@ app.get('/', (req, res) => {
 
 app.get('/sum', (req, res) => {
   
-    let a = Number(req.query.a)
-    let b = Number(req.query.b)
-    let result = `${a + b}`
+    const a = Number(req.query.a)
+    const b = Number(req.query.b)
+    const result = `${a + b}`
     res.send(result)
+})
+
+app.get('/openapi.json', (req, res) => {    
+  res.send(`{ "openapi": "1.0.0" }}`)
+})
+
+app.get('/public', (req, res) => {    
+  res.send(`This is a public endpoint`)
 })
 
 app.listen(port, () => {
