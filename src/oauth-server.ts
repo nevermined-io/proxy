@@ -1,15 +1,16 @@
+// initialize metrics before all else
+import { initializeMetrics, OTEL_SERVICE_NAMESPACE } from './metrics'
+initializeMetrics()
+
 import express from 'express'
 import { jwtDecrypt } from 'jose'
 import { match } from 'path-to-regexp'
-import { NodeSDK } from '@opentelemetry/sdk-node'
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
-import opentelemetry from '@opentelemetry/api'
+import { metrics } from '@opentelemetry/api'
 
-const sdk = new NodeSDK({
-  instrumentations: [getNodeAutoInstrumentations()],
+const meter = metrics.getMeter('oauth-server')
+const counter = meter.createCounter('oauth_server.webservice.counter', {
+  description: 'The number of requests to web services',
 })
-
-sdk.start()
 
 const app = express()
 
@@ -38,9 +39,13 @@ const validateAuthorization = async (authorizationHeader) => {
 }
 
 app.get('/', (req, res) => {
-  const meter = opentelemetry.metrics.getMeter('test-meter')
-  const counter = meter.createCounter('test-counter')
-  counter.add(1)
+  counter.add(1, {
+    did: 'did:nv:asdsadasd',
+    owner: '0xasdasdasdsad',
+    consumer: '0xasdasdasdsad',
+    endpoint: 'https:/api.openai.com/ask',
+    namespace: OTEL_SERVICE_NAMESPACE,
+  })
   res.send('Oauth server')
 })
 
@@ -111,9 +116,6 @@ app.post('/introspect', async (req, res) => {
   }
 
   // send metrics
-  const meter = opentelemetry.metrics.getMeter('test-meter')
-  const counter = meter.createCounter('test-counter')
-  counter.add(1)
 
   console.log(`RESPONSE:\n${JSON.stringify(response)}`)
   res.send(response)
