@@ -135,7 +135,7 @@ app.post('/introspect', async (req, res) => {
 
       counter.add(1, {
         did: payload.did,
-        owner: undefined,
+        owner: payload.owner,
         consumer: payload.userId,
         endpoint: payload.hostname,
         namespace: OTEL_SERVICE_NAMESPACE,
@@ -163,6 +163,7 @@ app.post('/introspect', async (req, res) => {
   let matches = false
   let scope = ''
   let upstreamHost = ''
+  let owner: string
   try {
     const subdomain = urlRequested.hostname.split('.')[0]
     logger.debug(`Subdomain: ${subdomain}`)
@@ -178,6 +179,7 @@ app.post('/introspect', async (req, res) => {
       logger.trace(`Response Status: ${response.status}`)
 
       const ddo = DDO.deserialize(await response.text())
+      ;[{ owner }] = ddo.publicKey
 
       const metadata = ddo.findServiceByType('metadata')
       logger.trace(JSON.stringify(metadata.attributes.main.webService))
@@ -211,6 +213,14 @@ app.post('/introspect', async (req, res) => {
       exp: '',
       iat: '',
     }
+
+    counter.add(1, {
+      did: scope,
+      owner: owner,
+      endpoint: upstreamHost,
+      namespace: OTEL_SERVICE_NAMESPACE,
+    })
+
     logger.debug(`OPEN URL RESPONSE:\n${JSON.stringify(response)}`)
     res.send(response)
     return
