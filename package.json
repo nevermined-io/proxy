@@ -1,7 +1,7 @@
 {
   "name": "@nevermined-io/proxy",
   "description": "Nevermined Proxy to gatekeep access to the remote web services",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "main": "index.js",
   "keywords": [],
   "author": "Nevermined <root@nevermined.io>",
@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/nevermined-io/proxy/issues"
   },
-  "homepage": "https://github.com/nevermined-io/proxy#readme",  
+  "homepage": "https://github.com/nevermined-io/proxy#readme",
   "scripts": {
     "clean": "rm -rf ./dist/ ./doc/ ./.nyc_output",
     "prebuild": "rm -rf ./dist && mkdir ./dist ",
@@ -25,16 +25,19 @@
     "start:oauth-server": "node dist/src/oauth-server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "@nevermined-io/sdk": "1.4.3",
-    "pino": "^6.10.0",
+    "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.40.0",
+    "express": "^4.18.2",
     "http-proxy": "^1.18.1",
     "jose": "^4.5.1",
     "jsonwebtoken": "^9.0.0",
-    "path-to-regexp": "^6.2.1",    
+    "path-to-regexp": "^6.2.1",
+    "pino": "^6.10.0",
     "typescript": "~4.9.5"
-  }, 
+  },
   "devDependencies": {
+    "@types/node": "~18.13.0",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
     "eslint": "^8.19.0",
@@ -45,6 +48,6 @@
     "eslint-plugin-mdx": "^2.0.2",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tsdoc": "^0.2.16",
-    "@types/node": "~18.13.0"
+    "prettier": "^2.8.8"
   }
 }

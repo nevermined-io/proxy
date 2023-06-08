@@ -15,6 +15,7 @@
   - [How to run the Proxy](#how-to-run-the-proxy)
     - [Environment variables](#environment-variables)
     - [Running the NGINX Proxy via Docker](#running-the-nginx-proxy-via-docker)
+    - [Enabling Metrics](#enabling-metrics)
   - [Demos](#demos)
     - [Demo using a standalone NGNIX](#demo-using-a-standalone-ngnix)
     - [OpenAI API demo](#openai-api-demo)
@@ -48,7 +49,6 @@ The proxy uses the following environment variables:
 * `SERVER_HOST` - The host used by the Oauth Server. By default and the recommended configuration is to use `127.0.0.1` so only the proxy process (NGINX) can connect to the local OAuth introspection server.
 * `SERVER_PORT` - The port used by the OAuth server. By default is `4000`. This port in normal configurations will be **internal** so won't be exposed and only will be accesible by the proxy process.
 * `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy.
-* `MARKETPLACE_API_URI` - The url to the marketplace api of the environment
 
 ### Running the NGINX Proxy via Docker
 
@@ -74,6 +74,19 @@ You can build it locally too and run it:
 docker build . -t nginx-proxy
 docker run -v $(pwd)/conf/certs:/ssl/certs -p 443:443 -p 3128:3128  -e "INTROSPECTION_URL=http://127.0.0.1:4000" nginx-proxy
 ```
+
+### Enabling metrics
+
+To send metrics to grafana use the following environment variables:
+
+* `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` - The endpoint where the metrics should be sent. Example `export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="https://otlp-gateway-prod-eu-west-0.grafana.net/otlp/v1/metrics"`
+* `OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION` - The authorization token to be included in the headers. Example `export OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION="Basic $(echo -n <grafana instance id>:<grafana api key> | base64 -w 0)"`
+* `OTEL_SERVICE_NAME` - The name of the service. Defaults to `oauth-server`
+* `OTEL_SERVICE_NAMESPACE` - The name of the namespace the service is currently deployed.
+
+For more information see:
+* [Push directly from applications using the OpenTelemetry SDKs](https://grafana.com/docs/grafana-cloud/data-configuration/otlp/send-data-otlp/#push-directly-from-applications-using-the-opentelemetry-sdks)
+* [Opentelemetry sdk configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/)
 
 ## Demos
 
