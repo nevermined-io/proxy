@@ -174,6 +174,8 @@ app.post('/introspect', async (req, res) => {
             upstreamHost = urlMatching.hostname
           }
         }
+      } else {
+        logger.debug(`Not a valid decoded DID ${did.getId()}}`)
       }
     } catch (error) {
       logger.warn(`${error as Error}`)

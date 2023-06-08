@@ -450,10 +450,10 @@
   resolved "https://registry.yarnpkg.com/@microsoft/tsdoc/-/tsdoc-0.14.2.tgz#c3ec604a0b54b9a9b87e9735dfc59e1a5da6a5fb"
   integrity sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==
 
-"@nevermined-io/sdk@1.4.2-rc1":
-  version "1.4.2-rc1"
-  resolved "https://registry.yarnpkg.com/@nevermined-io/sdk/-/sdk-1.4.2-rc1.tgz#cab6008fdc83695df9e2a54896da4f1c56f7577b"
-  integrity sha512-oSkCKy/mfyOGiWMwcWNCfaFKkSrfXH7N5Ncn5wa+Svtcg0EkdwFs84q5CfYqoXFm53MCxMDyV9F08DiBOr7Ayg==
+"@nevermined-io/sdk@1.4.3":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nevermined-io/sdk/-/sdk-1.4.3.tgz#064b6cb2510fb989af0e15ea62ee16a313024d06"
+  integrity sha512-Tf1lmRzsOGY1NSTQexqhtnc0r+U/hwlQRQK0ySpYwAWW16WrmVazkdsCyGyKBZlwM35axBrSc5iFvn6Sl6VM/A==
   dependencies:
     "@nevermined-io/subgraphs" "0.5.1"
     assert "^2.0.0"
@@ -4419,6 +4419,7 @@ string-to-arraybuffer@^1.0.0:
     is-base64 "^0.1.0"
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
