@@ -83,6 +83,7 @@ To send metrics to grafana use the following environment variables:
 * `OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION` - The authorization token to be included in the headers. Example `export OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION="Basic $(echo -n <grafana instance id>:<grafana api key> | base64 -w 0)"`
 * `OTEL_SERVICE_NAME` - The name of the service. Defaults to `oauth-server`
 * `OTEL_SERVICE_NAMESPACE` - The name of the namespace the service is currently deployed.
+* `OTEL_METRICS_DEBUG` - It set to `true` if will print metrics debug messages. Helpful to troubleshoot metrics problems.
 
 For more information see:
 * [Push directly from applications using the OpenTelemetry SDKs](https://grafana.com/docs/grafana-cloud/data-configuration/otlp/send-data-otlp/#push-directly-from-applications-using-the-opentelemetry-sdks)
