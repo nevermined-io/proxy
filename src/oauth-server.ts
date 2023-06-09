@@ -1,6 +1,6 @@
 // initialize metrics before all else
 import { initializeMetrics, OTEL_SERVICE_NAMESPACE } from './metrics'
-initializeMetrics()
+initializeMetrics(process.env.OTEL_METRICS_DEBUG === 'true')
 
 import { DDO, DID } from '@nevermined-io/sdk'
 import express from 'express'
