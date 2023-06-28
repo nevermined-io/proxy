@@ -111,10 +111,8 @@ app.post('/introspect', async (req, res) => {
   try {
     if (req.headers[NVM_AUTHORIZATION_HEADER]) {
       const userJwt = req.headers[NVM_AUTHORIZATION_HEADER]
-
-      logger.debug(`JWT: ${userJwt}`)
+      
       const payload = await getJwtPayload(userJwt, urlRequested)
-      logger.debug(`Payload: ${JSON.stringify(payload)}`)
       
       // Compose authorized response
       // Getting the access token from the JWT message
@@ -125,7 +123,6 @@ app.post('/introspect', async (req, res) => {
           serviceToken = payload.headers.authentication.token ?? ''
           authHeader = `Bearer ${serviceToken}`
         } else if (payload.headers.authentication.type === 'basic') {
-          logger.debug(`Basic auth encoding ${payload.headers.authentication.username}:${payload.headers.authentication.password}`)
           serviceToken = Buffer.from(
             `${payload.headers.authentication.username}:${payload.headers.authentication.password}`)
             .toString('base64')
@@ -155,7 +152,7 @@ app.post('/introspect', async (req, res) => {
         namespace: OTEL_SERVICE_NAMESPACE,
       })
 
-      logger.debug(`RESPONSE:\n${JSON.stringify(response)}`)
+      logger.trace(`RESPONSE:\n${JSON.stringify(response)}`)
       res.send(response)
       return
     } else {
