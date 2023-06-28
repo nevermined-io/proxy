@@ -2,7 +2,7 @@
 import { initializeMetrics, OTEL_SERVICE_NAMESPACE } from './metrics'
 initializeMetrics(process.env.OTEL_METRICS_DEBUG === 'true')
 
-import { DDO, DID, ResourceAuthentication } from '@nevermined-io/sdk'
+import { DDO, DID } from '@nevermined-io/sdk'
 import express from 'express'
 import { jwtDecrypt } from 'jose'
 import { match } from 'path-to-regexp'
