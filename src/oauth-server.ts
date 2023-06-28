@@ -2,7 +2,7 @@
 import { initializeMetrics, OTEL_SERVICE_NAMESPACE } from './metrics'
 initializeMetrics(process.env.OTEL_METRICS_DEBUG === 'true')
 
-import { DDO, DID } from '@nevermined-io/sdk'
+import { DDO, DID, ResourceAuthentication } from '@nevermined-io/sdk'
 import express from 'express'
 import { jwtDecrypt } from 'jose'
 import { match } from 'path-to-regexp'
@@ -114,11 +114,23 @@ app.post('/introspect', async (req, res) => {
 
       logger.debug(`JWT: ${userJwt}`)
       const payload = await getJwtPayload(userJwt, urlRequested)
+      logger.debug(`Payload: ${JSON.stringify(payload)}`)
+      
       // Compose authorized response
       // Getting the access token from the JWT message
       let serviceToken = ''
+      let authHeader = ''
       try {
-        serviceToken = payload.headers.authentication.token ?? ''
+        if (payload.headers.authentication.type === 'bearer' || payload.headers.authentication.type === 'oauth') {
+          serviceToken = payload.headers.authentication.token ?? ''
+          authHeader = `Bearer ${serviceToken}`
+        } else if (payload.headers.authentication.type === 'basic') {
+          logger.debug(`Basic auth encoding ${payload.headers.authentication.username}:${payload.headers.authentication.password}`)
+          serviceToken = Buffer.from(
+            `${payload.headers.authentication.username}:${payload.headers.authentication.password}`)
+            .toString('base64')
+          authHeader = `Basic ${serviceToken}`
+        }
       } catch (error) {
         logger.debug(`Authentication token not found, service_token will be empty`)
       }
@@ -126,6 +138,8 @@ app.post('/introspect', async (req, res) => {
       const response = {
         active: true,
         user_id: payload.userId,
+        auth_type: payload.headers.authentication.type,
+        auth_header: authHeader,
         service_token: serviceToken,
         upstream_host: payload.hostname,
         scope: payload.did,
@@ -207,6 +221,8 @@ app.post('/introspect', async (req, res) => {
     const response = {
       active: true,
       user_id: '',
+      auth_type: 'none',
+      auth_header: '',
       service_token: '',
       upstream_host: upstreamHost,
       scope: scope,
