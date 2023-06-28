@@ -111,14 +111,23 @@ app.post('/introspect', async (req, res) => {
   try {
     if (req.headers[NVM_AUTHORIZATION_HEADER]) {
       const userJwt = req.headers[NVM_AUTHORIZATION_HEADER]
-
-      logger.debug(`JWT: ${userJwt}`)
+      
       const payload = await getJwtPayload(userJwt, urlRequested)
+      
       // Compose authorized response
       // Getting the access token from the JWT message
       let serviceToken = ''
+      let authHeader = ''
       try {
-        serviceToken = payload.headers.authentication.token ?? ''
+        if (payload.headers.authentication.type === 'bearer' || payload.headers.authentication.type === 'oauth') {
+          serviceToken = payload.headers.authentication.token ?? ''
+          authHeader = `Bearer ${serviceToken}`
+        } else if (payload.headers.authentication.type === 'basic') {
+          serviceToken = Buffer.from(
+            `${payload.headers.authentication.username}:${payload.headers.authentication.password}`)
+            .toString('base64')
+          authHeader = `Basic ${serviceToken}`
+        }
       } catch (error) {
         logger.debug(`Authentication token not found, service_token will be empty`)
       }
@@ -126,6 +135,8 @@ app.post('/introspect', async (req, res) => {
       const response = {
         active: true,
         user_id: payload.userId,
+        auth_type: payload.headers.authentication.type,
+        auth_header: authHeader,
         service_token: serviceToken,
         upstream_host: payload.hostname,
         scope: payload.did,
@@ -141,7 +152,7 @@ app.post('/introspect', async (req, res) => {
         namespace: OTEL_SERVICE_NAMESPACE,
       })
 
-      logger.debug(`RESPONSE:\n${JSON.stringify(response)}`)
+      logger.trace(`RESPONSE:\n${JSON.stringify(response)}`)
       res.send(response)
       return
     } else {
@@ -207,6 +218,8 @@ app.post('/introspect', async (req, res) => {
     const response = {
       active: true,
       user_id: '',
+      auth_type: 'none',
+      auth_header: '',
       service_token: '',
       upstream_host: upstreamHost,
       scope: scope,
