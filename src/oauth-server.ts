@@ -4,7 +4,7 @@ initializeMetrics(process.env.OTEL_METRICS_DEBUG === 'true')
 
 import { DDO, DID } from '@nevermined-io/sdk'
 import express from 'express'
-import { jwtDecrypt } from 'jose'
+import { jwtDecrypt, JWTPayload } from 'jose'
 import { match } from 'path-to-regexp'
 import fetch from 'node-fetch'
 import { metrics } from '@opentelemetry/api'
@@ -78,10 +78,10 @@ const urlMatches = (
 }
 
 const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
-  let payload
+  let payload: JWTPayload & { [prop: string]: any }
 
   try {
-    payload = await validateAuthorization(userJwt)
+    payload = (await validateAuthorization(userJwt)) as JWTPayload & { [prop: string]: unknown }
   } catch (err) {
     throw new Error(`Invalid authorization token: ${(err as Error).message}`)
   }
@@ -111,21 +111,24 @@ app.post('/introspect', async (req, res) => {
   try {
     if (req.headers[NVM_AUTHORIZATION_HEADER]) {
       const userJwt = req.headers[NVM_AUTHORIZATION_HEADER]
-      
+
       const payload = await getJwtPayload(userJwt, urlRequested)
-      
+
       // Compose authorized response
       // Getting the access token from the JWT message
       let serviceToken = ''
       let authHeader = ''
       try {
-        if (payload.headers.authentication.type === 'bearer' || payload.headers.authentication.type === 'oauth') {
+        if (
+          payload.headers.authentication.type === 'bearer' ||
+          payload.headers.authentication.type === 'oauth'
+        ) {
           serviceToken = payload.headers.authentication.token ?? ''
           authHeader = `Bearer ${serviceToken}`
         } else if (payload.headers.authentication.type === 'basic') {
           serviceToken = Buffer.from(
-            `${payload.headers.authentication.username}:${payload.headers.authentication.password}`)
-            .toString('base64')
+            `${payload.headers.authentication.username}:${payload.headers.authentication.password}`,
+          ).toString('base64')
           authHeader = `Basic ${serviceToken}`
         }
       } catch (error) {
@@ -147,6 +150,7 @@ app.post('/introspect', async (req, res) => {
       counter.add(1, {
         did: payload.did,
         owner: payload.owner,
+        access_date: new Date().toLocaleString(),
         consumer: payload.userId,
         endpoint: payload.hostname,
         namespace: OTEL_SERVICE_NAMESPACE,
