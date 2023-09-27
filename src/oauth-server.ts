@@ -150,7 +150,7 @@ app.post('/introspect', async (req, res) => {
       counter.add(1, {
         did: payload.did,
         owner: payload.owner,
-        access_date: new Date().toLocaleString(),
+        access_date: new Date().toISOString(),
         consumer: payload.userId,
         endpoint: payload.hostname,
         namespace: OTEL_SERVICE_NAMESPACE,
