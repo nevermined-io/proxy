@@ -17,9 +17,15 @@ const counter = meter.createCounter('oauth_server.webservice.counter', {
 const app = express()
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const logger = require('pino')({
+const logger = require('pino')({  
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
 })
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const txCacheLogger = require('pino')({  
+  level: 'info'
+  },
+  process.env.TX_DESTINATION || '/tmp/.nevermined/oauth-server.log' 
+)
 
 // By default we only listen into localhost
 // The proxy server will connect from the same host so we protect the oauth server
@@ -43,11 +49,12 @@ const MARKETPLACE_API_URI =
 // Required because we are dealing with self signed certificates locally
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
+
 const validateAuthorization = async (authorizationHeader) => {
   const tokens = authorizationHeader.split(' ')
   const accessToken = tokens.length > 1 ? tokens[1] : tokens[0]
   const { payload } = await jwtDecrypt(accessToken, JWT_SECRET)
-
+  
   return payload
 }
 
@@ -58,7 +65,7 @@ const urlMatches = (
   let matches = false
   let urlMatching = undefined
   endpoints.forEach((e) => {
-    try {
+    try {      
       const endpoint = new URL(e)
       logger.trace(
         `Matching endpoint ${endpoint.pathname} with requestedUrl ${urlRequested.pathname} `,
@@ -71,7 +78,7 @@ const urlMatches = (
         urlMatching = endpoint
       }
     } catch (error) {
-      throw new Error(`Error parsing url ${(error as Error).message}`)
+      throw new Error(`Error parsing url ${urlRequested} with endpoint ${e}: ${(error as Error).message}`)
     }
   })
   return { matches, urlMatching }
@@ -139,12 +146,11 @@ app.post('/introspect', async (req, res) => {
         active: true,
         user_id: payload.userId,
         auth_type: payload.headers.authentication.type,
-        auth_header: authHeader,
-        service_token: serviceToken,
         upstream_host: payload.hostname,
         scope: payload.did,
         exp: payload.exp,
         iat: payload.iat,
+        ercType: payload.ercType,
       }
 
       counter.add(1, {
@@ -155,10 +161,16 @@ app.post('/introspect', async (req, res) => {
         endpoint: payload.hostname,
         namespace: OTEL_SERVICE_NAMESPACE,
       })
+      logger.info(`Response: ${response.active} for ${response.scope}`)
+      txCacheLogger.info(JSON.stringify(response))
 
-      logger.trace(`RESPONSE:\n${JSON.stringify(response)}`)
-      res.send(response)
-      return
+      res.send({
+        ...response,
+        // We add the service token and auth header to the response
+        service_token: serviceToken,
+        auth_header: authHeader 
+      })
+
     } else {
       logger.debug(`No ${NVM_AUTHORIZATION_HEADER} header found`)
     }

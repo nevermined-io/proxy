@@ -1,7 +1,7 @@
 import express from 'express'
 
 const app = express()
-const port = 3000
+const SERVER_PORT = process.env.SERVER_PORT || 3000
 
 const AUTH_TOKEN = 'new_authorization_token'
 
@@ -37,6 +37,6 @@ app.get('/public', (req, res) => {
   res.send(`This is a public endpoint`)
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+app.listen(SERVER_PORT, () => {
+  console.log(`Example app listening on port ${SERVER_PORT}`)
 })
