@@ -10,7 +10,8 @@ import fetch from 'node-fetch'
 import { metrics } from '@opentelemetry/api'
 
 const meter = metrics.getMeter('oauth-server')
-const counter = meter.createCounter('oauth_server.webservice.counter', {
+const metricName = process.env.OTEL_METRIC_NAME || 'oauth_server.webservice.counter'
+const counter = meter.createCounter(metricName, {
   description: 'The number of requests to web services',
 })
 

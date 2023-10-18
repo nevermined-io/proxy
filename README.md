@@ -15,7 +15,7 @@
   - [How to run the Proxy](#how-to-run-the-proxy)
     - [Environment variables](#environment-variables)
     - [Running the NGINX Proxy via Docker](#running-the-nginx-proxy-via-docker)
-    - [Enabling Metrics](#enabling-metrics)
+    - [Enabling metrics](#enabling-metrics)
   - [Demos](#demos)
     - [Demo using a standalone NGNIX](#demo-using-a-standalone-ngnix)
     - [OpenAI API demo](#openai-api-demo)
@@ -84,6 +84,7 @@ To send metrics to grafana use the following environment variables:
 * `OTEL_SERVICE_NAME` - The name of the service. Defaults to `oauth-server`
 * `OTEL_SERVICE_NAMESPACE` - The name of the namespace the service is currently deployed.
 * `OTEL_METRICS_DEBUG` - It set to `true` if will print metrics debug messages. Helpful to troubleshoot metrics problems.
+* `OTEL_METRIC_NAME` - The name that the metric will get
 
 For more information see:
 * [Push directly from applications using the OpenTelemetry SDKs](https://grafana.com/docs/grafana-cloud/data-configuration/otlp/send-data-otlp/#push-directly-from-applications-using-the-opentelemetry-sdks)
