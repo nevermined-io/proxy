@@ -256,7 +256,7 @@ app.post('/introspect', async (req, res) => {
   }
 
   // Error response
-  res.writeHead(401)
+  // res.writeHead(401)
   res.end()
   return
 })
