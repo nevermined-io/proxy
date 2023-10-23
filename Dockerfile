@@ -9,11 +9,6 @@ ENV SERVER_HOST "127.0.0.1"
 ENV SERVER_PORT "4000"
 ENV JWT_SECRET_PHRASE "12345678901234567890123456789012"
 
-ENV PG_HOST="localhost"
-ENV PG_USER="postgres"
-ENV PG_PASSWORD="secret"
-ENV PG_DB="nvm_one"
-
 # Nginx environment variables
 ENV INTROSPECTION_URL "http://127.0.0.1:4000/introspect"
 
