@@ -9,6 +9,11 @@ ENV SERVER_HOST "127.0.0.1"
 ENV SERVER_PORT "4000"
 ENV JWT_SECRET_PHRASE "12345678901234567890123456789012"
 
+ENV PG_HOST="localhost"
+ENV PG_USER="postgres"
+ENV PG_PASSWORD="secret"
+ENV PG_DB="nvm_one"
+
 # Nginx environment variables
 ENV INTROSPECTION_URL "http://127.0.0.1:4000/introspect"
 
@@ -19,13 +24,23 @@ RUN apk update && apk upgrade && \
     bash \
     nodejs-current \
     yarn \
-    npm
+    npm \
+    rsyslog \
+    rsyslog-pgsql
 
 # Preparing NGINX
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY conf/nginx/proxy.conf /etc/nginx/sites-enabled/proxy.conf
 COPY conf/nginx/oauth2.js /etc/nginx/conf.d/oauth2.js
+
+# Preparing Rsyslog
+COPY conf/rsyslog/51-upstream.template.conf /etc/rsyslog.d/51-upstream.conf
+
+RUN  sed -i "s|PG_HOST|$PG_HOST|g" /etc/rsyslog.d/51-upstream.conf
+RUN  sed -i "s|PG_USER|$PG_USER|g" /etc/rsyslog.d/51-upstream.conf
+RUN  sed -i "s|PG_PASSWORD|$PG_PASSWORD|g" /etc/rsyslog.d/51-upstream.conf
+RUN  sed -i "s|PG_DB|$PG_DB|g" /etc/rsyslog.d/51-upstream.conf
 
 # Preparing OAuth Server
 COPY package.json ./

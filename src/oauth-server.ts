@@ -24,7 +24,7 @@ const logger = require('pino')({
 const txCacheLogger = require('pino')({  
   level: 'info'
   },
-  process.env.TX_DESTINATION || '/tmp/.nevermined/oauth-server.log' 
+  process.env.TX_DESTINATION || '/tmp/nv-oauth-server.log' 
 )
 
 // By default we only listen into localhost
