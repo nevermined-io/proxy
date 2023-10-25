@@ -21,12 +21,7 @@ const app = express()
 const logger = require('pino')({  
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
 })
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-// const txCacheLogger = require('pino')({  
-//   level: 'info'
-//   },
-//   process.env.TX_DESTINATION || '/tmp/nv-oauth-server.log' 
-// )
+
 
 // By default we only listen into localhost
 // The proxy server will connect from the same host so we protect the oauth server
@@ -170,7 +165,7 @@ app.post('/introspect', async (req, res) => {
         service_token: serviceToken,
         auth_header: authHeader 
       })
-
+      return
     } else {
       logger.debug(`No ${NVM_AUTHORIZATION_HEADER} header found`)
     }
@@ -256,7 +251,7 @@ app.post('/introspect', async (req, res) => {
   }
 
   // Error response
-  // res.writeHead(401)
+  res.writeHead(401)
   res.end()
   return
 })

@@ -95,16 +95,11 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
   const results = []
   const errors = []
   let activeContractAddress = ''
-  
-
-  // const accounts = await nvm.accounts.list()
-  // const account = accounts[accountIndex]
 
   logger.debug(`Using account: ${account.getId()}`)
 
   for await (const log of logs) {
   
-  // logs.forEach(async (log) => {
     logger.info(`Processing (burn) transaction: ${log.logId}`)    
 
     try {
@@ -176,7 +171,7 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
       errors.push({logId: log.logId, errorCode: 'BURN-001', errorMessage: (error as Error).message.replace('\'', '').replace('"', '')})
     }
     
-  } //)
+  }
   return { success: results, errors }
 }
 
@@ -243,9 +238,7 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
 const getAccount = async (config: ConfigEntry, nvm: Nevermined): Promise<Account> => {
   
     try {      
-      const account = await nvm.accounts.getAccount(config.nvm.neverminedNodeAddress)
-      // const account = (await nvm.accounts.list())[0]
-      return account
+      return await nvm.accounts.getAccount(config.nvm.neverminedNodeAddress)      
     } catch (error) {
       logger.error(`Unable to get NODE account`)
       logger.error(`ERROR: ${(error as Error).message}`)
