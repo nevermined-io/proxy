@@ -23,8 +23,10 @@
     "start:proxy": "node src/proxy.js",
     "start:web-service": "node dist/src/web-service.js",    
     "start:oauth-server": "node dist/src/oauth-server.js",
+    "start:burner": "node dist/src/credits-burner.js",
     "dev:web-service": "ts-node src/web-service.ts", 
-    "dev:oauth-server": "ts-node src/oauth-server.ts"
+    "dev:oauth-server": "ts-node src/oauth-server.ts",
+    "dev:burner": "ts-node src/credits-burner.ts"
   },
   "dependencies": {
     "@nevermined-io/sdk": "2.0.0",
@@ -36,6 +38,7 @@
     "jsonwebtoken": "^9.0.0",
     "path-to-regexp": "^6.2.1",
     "pino": "^8.15.4",
+    "pg": "^8.11.3",
     "typescript": "^5.1.6"
   },
   "devDependencies": {

@@ -1,0 +1,15 @@
+FROM node:18-alpine
+LABEL maintainer="Nevermined <root@nevermined.io>"
+
+RUN apk add --no-cache autoconf automake alpine-sdk bash
+
+
+# Preparing Credits Burner
+COPY package.json ./
+COPY tsconfig* ./
+COPY src ./src
+
+RUN yarn 
+RUN yarn build
+
+ENTRYPOINT [ "yarn", "run", "start:burner" ]

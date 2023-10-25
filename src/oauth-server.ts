@@ -21,11 +21,11 @@ const logger = require('pino')({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
 })
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const txCacheLogger = require('pino')({  
-  level: 'info'
-  },
-  process.env.TX_DESTINATION || '/tmp/nv-oauth-server.log' 
-)
+// const txCacheLogger = require('pino')({  
+//   level: 'info'
+//   },
+//   process.env.TX_DESTINATION || '/tmp/nv-oauth-server.log' 
+// )
 
 // By default we only listen into localhost
 // The proxy server will connect from the same host so we protect the oauth server
@@ -162,7 +162,6 @@ app.post('/introspect', async (req, res) => {
         namespace: OTEL_SERVICE_NAMESPACE,
       })
       logger.info(`Response: ${response.active} for ${response.scope}`)
-      txCacheLogger.info(JSON.stringify(response))
 
       res.send({
         ...response,
