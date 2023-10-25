@@ -3,7 +3,7 @@ import { Client } from 'pg'
 import { ConfigEntry, getNVMConfig, postgresConfigTemplate } from './config'
 
 const verbose = process.env.VERBOSE === 'true'
-const maxRetries = process.env.MAX_RETRIES || 10
+const maxRetries = process.env.MAX_RETRIES || 3
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('pino')({  
@@ -111,13 +111,16 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
       // 1. Get the DID from the log
       const logEntry = JSON.parse(log.logLine)
       const serviceDID = logEntry.scope
-      const userId = logEntry.user_id      
+      const userId = logEntry.user_id   
+      const upstreamStatus = logEntry.upstream_status   
       let creditsConsumed: bigint
-
+      
       if (serviceDID === undefined || serviceDID === '')
         throw new Error(`Invalid DID: ${serviceDID}`)
       if (userId === undefined || userId === '')
         throw new Error(`Invalid userId: ${userId}`)
+      if (upstreamStatus.startsWith('2') === false)
+        throw new Error(`Upstream Service didnt work so we dont charge credits for it`)
       if (logEntry.upstream_http_NVMCreditsConsumed === undefined || logEntry.upstream_http_NVMCreditsConsumed === '' || BigInt(logEntry.upstream_http_NVMCreditsConsumed) < 1n)
         creditsConsumed = 1n
 
@@ -188,7 +191,7 @@ const updateDBTransactions = async (pgClient: Client, inputTxs: TransactionsProc
     logger.debug(`Updating DB transaction: ${tx}}`)
 
     try {      
-      const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Done', "errorMessage" = '' WHERE c."logId" = '${tx.logId}'`
+      const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Done', "errorMessage" = '', "updatedAt" = NOW() WHERE c."logId" = '${tx.logId}'`
       logger.debug(`Update Query: ${updateQuery}`)
       const result = await pgClient.query(updateQuery)
       logger.info(`DB transaction updated: ${tx.logId} with result ${result.rowCount}`)
@@ -207,9 +210,7 @@ const updateDBTransactions = async (pgClient: Client, inputTxs: TransactionsProc
     logger.debug(`Updating DB Error transaction: ${error.logId}}`)
 
     try {    
-      // UPDATE public."serviceLogsQueue" as c SET status = 'Error', retried = retried+1, "errorMessage" = 'BURN-001 Cannot read properties of undefined (reading toLowerCase)' WHERE c."logId" = 'd8514abf-9415-481d-9005-b36bd817aee3';
-
-      const updateQuery = `UPDATE public."serviceLogsQueue" as c SET retried = retried+1, "errorMessage" = '${error.errorCode} ${error.errorMessage}' WHERE c."logId" = '${error.logId}'`
+      const updateQuery = `UPDATE public."serviceLogsQueue" as c SET retried = retried+1, "updatedAt" = NOW(), "errorMessage" = '${error.errorCode} ${error.errorMessage}' WHERE c."logId" = '${error.logId}'`
       logger.debug(`Update Error Query: ${updateQuery}`)
       const result = await pgClient.query(updateQuery)
       logger.info(`DB transaction updated to Error: ${error.logId} with result ${result.rowCount}`)
@@ -226,7 +227,7 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   
   try {
 
-    const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error' WHERE retried >= ${maxRetries}`
+    const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries}`
     logger.debug(`Update Error Query: ${updateQuery}`)
     const result = await pgClient.query(updateQuery)
     logger.info(`DB transaction cleanup with result ${result.rowCount}`)

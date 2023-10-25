@@ -199,7 +199,6 @@ The burner uses the following environment variables:
 - `CONTRACTS_VERSION` - The version of the Nevermined contracts
 - `CONTRACTS_TAG` - The tag of the Nevermined contracts
 - `VERBOSE` - If `true` the process runs in verbose mode
-- `NODE_ENV` - 
 
 Related with the account used to interact with the Smart Contracts:
 - `SEED_PHRASE` - The mnemonic of the account to be used to interact with the Smart Contracts
