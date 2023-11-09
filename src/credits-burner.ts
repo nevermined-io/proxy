@@ -153,15 +153,11 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
         results.push({ logId: log.logId, creditsBurned: 0n, message: 'Free Service' })
         
       } else {
-
         const userBalance = await nvm.nfts1155.balance(subscriptionDID, userId)
         logger.debug(`User [${userId}] balance: ${userBalance} for tokenId: ${tokenId}`)
 
-        // 5. Burn the NFT
-        // const creditsToBurn = creditsConsumed > minAmountToBurn ? creditsConsumed : minAmountToBurn        
-        logger.debug(`Credits to burn: ${adjustedCredits} from subscription: ${subscriptionDID}`)
-        
-        // if (userBalance >= creditsToBurn) {
+        // 5. Burn the NFT        
+        logger.debug(`Credits to burn: ${adjustedCredits} from subscription: ${subscriptionDID}`)                
         if (NFTServiceAttributes.isCreditsBalanceEnough(nftAccess.attributes.main.nftAttributes, userBalance)) {
           logger.info(`Burning ${adjustedCredits} credits from user ${userId} on DID ${subscriptionDID} using account ${account.getId()}`)          
           await nvm.nfts1155.burnFromHolder(userId, tokenId, adjustedCredits, account)
