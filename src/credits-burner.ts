@@ -1,4 +1,4 @@
-import { Account, DDO, Nevermined, ServiceNFTAccess } from '@nevermined-io/sdk'
+import { Account, DDO, NFTServiceAttributes, Nevermined, ServiceNFTAccess } from '@nevermined-io/sdk'
 import { Client } from 'pg'
 import { ConfigEntry, getNVMConfig, postgresConfigTemplate } from './config'
 
@@ -116,8 +116,11 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
         throw new Error(`Invalid userId: ${userId}`)
       if (upstreamStatus.startsWith('2') === false)
         throw new Error(`Upstream Service didnt work so we dont charge credits for it`)
+      
       if (logEntry.upstream_http_NVMCreditsConsumed === undefined || logEntry.upstream_http_NVMCreditsConsumed === '' || BigInt(logEntry.upstream_http_NVMCreditsConsumed) < 1n)
         creditsConsumed = 1n
+      else
+        creditsConsumed = BigInt(logEntry.upstream_http_NVMCreditsConsumed)
 
       // 2. Resolve the DDO from the DID
       logger.debug(`Resolving DID: ${serviceDID}`)
@@ -137,27 +140,28 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
         logger.debug(`NFT contract already loaded, skipping`)
       }
 
-      // 4. Get the user balance
-      const minAmountToBurn = DDO.getNftAmountFromService(nftAccess)
-      logger.debug(`Min amount to burn: ${minAmountToBurn}`)
+      
+      const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
+        nftAccess.attributes.main.nftAttributes, creditsConsumed
+      )
+      
+      logger.debug(`Credits requested to burn (by upstream service): ${creditsConsumed}`)
+      logger.debug(`Adjusted Amount to burn: ${adjustedCredits}`)
 
-      if (minAmountToBurn === undefined || minAmountToBurn < 1n)  { // The NFT Access Service is a free service
+      if (adjustedCredits === undefined || adjustedCredits < 1n)  { // The NFT Access Service is a free service
         logger.info(`Skipping DID ${serviceDID} because it is a free service`)
         results.push({ logId: log.logId, creditsBurned: 0n, message: 'Free Service' })
         
       } else {
-
         const userBalance = await nvm.nfts1155.balance(subscriptionDID, userId)
         logger.debug(`User [${userId}] balance: ${userBalance} for tokenId: ${tokenId}`)
 
-        // 5. Burn the NFT
-        const creditsToBurn = creditsConsumed > minAmountToBurn ? creditsConsumed : minAmountToBurn        
-        logger.debug(`Credits to burn: ${creditsToBurn} from subscription: ${subscriptionDID}`)
-
-        if (userBalance >= creditsToBurn) {
-          logger.info(`Burning ${creditsToBurn} credits from user ${userId} on DID ${subscriptionDID} using account ${account.getId()}`)          
-          await nvm.nfts1155.burnFromHolder(userId, tokenId, creditsToBurn, account)
-          results.push({ logId: log.logId, creditsBurned: creditsToBurn, message: 'Burned' })
+        // 5. Burn the NFT        
+        logger.debug(`Credits to burn: ${adjustedCredits} from subscription: ${subscriptionDID}`)                
+        if (NFTServiceAttributes.isCreditsBalanceEnough(nftAccess.attributes.main.nftAttributes, userBalance)) {
+          logger.info(`Burning ${adjustedCredits} credits from user ${userId} on DID ${subscriptionDID} using account ${account.getId()}`)          
+          await nvm.nfts1155.burnFromHolder(userId, tokenId, adjustedCredits, account)
+          results.push({ logId: log.logId, creditsBurned: adjustedCredits, message: 'Burned' })
 
         } else {
           throw new Error(`User ${userId} does not have enough credits to burn ${creditsConsumed} credits on DID ${serviceDID}`)
@@ -183,7 +187,7 @@ const updateDBTransactions = async (pgClient: Client, inputTxs: TransactionsProc
   const nvmErrors: TransactionError[] = []
 
   for await (const tx of inputTxs.success) {
-    logger.debug(`Updating DB transaction: ${tx}}`)
+    logger.debug(`Updating DB transaction: ${JSON.stringify(tx)}}`)
 
     try {      
       const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Done', "errorMessage" = '', "updatedAt" = NOW() WHERE c."logId" = '${tx.logId}'`
@@ -223,7 +227,7 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   try {
 
     const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries}`
-    logger.debug(`Update Error Query: ${updateQuery}`)
+    logger.debug(`Cleanup transactions query: ${updateQuery}`)
     const result = await pgClient.query(updateQuery)
     logger.info(`DB transaction cleanup with result ${result.rowCount}`)
 
