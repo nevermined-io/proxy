@@ -5,6 +5,8 @@ import { ConfigEntry, getNVMConfig, postgresConfigTemplate } from './config'
 const verbose = process.env.VERBOSE === 'true'
 const maxRetries = process.env.MAX_RETRIES || 3
 
+const sleepDuration = Number(process.env.SLEEP_DURATION) || 5000
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('pino')({  
   level: verbose ? 'info' : 'debug',
@@ -58,7 +60,7 @@ const loadNevermined = async (
 }
 
 const loadPostgresClient = async (postgresConfig: any): Client => {
-  logger.info(`Connecting to Postgres at ${postgresConfig.host}:${postgresConfig.port}`)
+  logger.trace(`Connecting to Postgres at ${postgresConfig.host}:${postgresConfig.port}`)
   // Set up Postgresql client
   const postgresClient = new Client({
     host: postgresConfig.host,
@@ -96,7 +98,7 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
   const errors = []
   let activeContractAddress = ''
 
-  logger.debug(`Using account: ${account.getId()}`)
+  logger.trace(`Using account: ${account.getId()}`)
 
   for await (const log of logs) {
   
@@ -108,7 +110,7 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
       const serviceDID = logEntry.scope
       const userId = logEntry.user_id   
       const upstreamStatus = logEntry.upstream_status   
-      let creditsConsumed: bigint
+      let creditsFromHeader: bigint = undefined
       
       if (serviceDID === undefined || serviceDID === '')
         throw new Error(`Invalid DID: ${serviceDID}`)
@@ -116,11 +118,13 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
         throw new Error(`Invalid userId: ${userId}`)
       if (upstreamStatus.startsWith('2') === false)
         throw new Error(`Upstream Service didnt work so we dont charge credits for it`)
-      
-      if (logEntry.upstream_http_NVMCreditsConsumed === undefined || logEntry.upstream_http_NVMCreditsConsumed === '' || BigInt(logEntry.upstream_http_NVMCreditsConsumed) < 1n)
-        creditsConsumed = 1n
-      else
-        creditsConsumed = BigInt(logEntry.upstream_http_NVMCreditsConsumed)
+
+
+
+      // if (logEntry.upstream_http_NVMCreditsConsumed === undefined || logEntry.upstream_http_NVMCreditsConsumed === '' || BigInt(logEntry.upstream_http_NVMCreditsConsumed) < 1n)
+      //   creditsConsumed = 1n
+      // else
+      //   creditsConsumed = BigInt(logEntry.upstream_http_NVMCreditsConsumed)
 
       // 2. Resolve the DDO from the DID
       logger.debug(`Resolving DID: ${serviceDID}`)
@@ -131,6 +135,7 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
       const ddoContractAddress = DDO.getNftContractAddressFromService(nftAccess as ServiceNFTAccess)
       const tokenId = DDO.getTokenIdFromService(nftAccess)
       const subscriptionDID = `did:nv:${tokenId}`
+      const ddoOwner = await nvm.assets.owner(subscriptionDID)
 
       if (ddoContractAddress !== activeContractAddress) {
         logger.debug(`Loading NFT from address: ${ddoContractAddress}`)
@@ -140,15 +145,25 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
         logger.debug(`NFT contract already loaded, skipping`)
       }
 
+      try {
+        if (logEntry.upstream_http_NVMCreditsConsumed !== undefined && BigInt(logEntry.upstream_http_NVMCreditsConsumed))
+          creditsFromHeader = BigInt(logEntry.upstream_http_NVMCreditsConsumed)
+      } catch (error) {
+        logger.warn(`Unable to parse credits from header: ${logEntry.upstream_http_NVMCreditsConsumed}`)        
+      }      
       
       const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
-        nftAccess.attributes.main.nftAttributes, creditsConsumed
+        nftAccess.attributes.main.nftAttributes, creditsFromHeader
       )
       
-      logger.debug(`Credits requested to burn (by upstream service): ${creditsConsumed}`)
+      logger.debug(`Credits requested to burn (by upstream service): ${creditsFromHeader}`)
       logger.debug(`Adjusted Amount to burn: ${adjustedCredits}`)
 
-      if (adjustedCredits === undefined || adjustedCredits < 1n)  { // The NFT Access Service is a free service
+      if (userId.toLowerCase() === ddoOwner.toLowerCase()) {
+        logger.info(`Skipping DID ${serviceDID} because it is called by the owner`)
+        results.push({ logId: log.logId, creditsBurned: 0n, message: 'Call by owner' })
+
+      } else if (adjustedCredits === undefined || adjustedCredits < 1n)  { // The NFT Access Service is a free service
         logger.info(`Skipping DID ${serviceDID} because it is a free service`)
         results.push({ logId: log.logId, creditsBurned: 0n, message: 'Free Service' })
         
@@ -164,7 +179,7 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
           results.push({ logId: log.logId, creditsBurned: adjustedCredits, message: 'Burned' })
 
         } else {
-          throw new Error(`User ${userId} does not have enough credits to burn ${creditsConsumed} credits on DID ${serviceDID}`)
+          throw new Error(`User ${userId} does not have enough credits to burn ${creditsFromHeader} credits on DID ${serviceDID}`)
         }
   
       }
@@ -181,7 +196,7 @@ const burnTransactions = async (nvm: Nevermined, logs: any[], account: Account):
 
 const updateDBTransactions = async (pgClient: Client, inputTxs: TransactionsProcessed): Promise<TransactionsProcessed> => {
   
-  logger.debug(`Starting to update DB transactions`)
+  logger.trace(`Starting to update DB transactions`)
 
   const txsProcessed: TransactionSuccess[] = []
   const nvmErrors: TransactionError[] = []
@@ -227,9 +242,10 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   try {
 
     const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries}`
-    logger.debug(`Cleanup transactions query: ${updateQuery}`)
+    logger.trace(`Cleanup transactions query: ${updateQuery}`)
     const result = await pgClient.query(updateQuery)
-    logger.info(`DB transaction cleanup with result ${result.rowCount}`)
+    if (result.rowCount > 0)
+      logger.info(`DB transaction cleanup with result ${result.rowCount}`)
 
   } catch (error) {
     logger.error(`Unable to cleanup Transactions from database`)
@@ -250,24 +266,32 @@ const getAccount = async (config: ConfigEntry, nvm: Nevermined): Promise<Account
     }
 }
 
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const main = async () => {
 
-  const pgClient = await loadPostgresClient(postgresConfigTemplate)
 
   config = await getNVMConfig()
   const nvm = await loadNevermined(config, verbose)
   const account = await getAccount(config, nvm)
 
-  const batches = await getTransacionBatches(pgClient)
-  const txs = await burnTransactions(nvm, batches, account)
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const pgClient = await loadPostgresClient(postgresConfigTemplate)
 
-  logger.debug(`Transactions to update: Success = ${txs.success.length} - Errors = ${txs.errors.length}`)
-  await updateDBTransactions(pgClient, txs)
+    const batches = await getTransacionBatches(pgClient)
+    const txs = await burnTransactions(nvm, batches, account)
+  
+    logger.trace(`Transactions to update: Success = ${txs.success.length} - Errors = ${txs.errors.length}`)
+    await updateDBTransactions(pgClient, txs)
+  
+    await cleanupDBPendingTransactions(pgClient)
+  
+    await pgClient.end()    
+    logger.info(`Burner round finished! Sleeping ${sleepDuration}ms ...`)
+    await sleep(sleepDuration)
+  }
 
-  await cleanupDBPendingTransactions(pgClient)
-
-  await pgClient.end()
 }
 
 
