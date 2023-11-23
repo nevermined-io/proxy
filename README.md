@@ -200,6 +200,8 @@ The burner uses the following environment variables:
 - `CONTRACTS_VERSION` - The version of the Nevermined contracts
 - `CONTRACTS_TAG` - The tag of the Nevermined contracts
 - `VERBOSE` - If `true` the process runs in verbose mode
+- `MAX_RETRIES` - Number of retries the process will do try to burn the credits
+- `SLEEP_DURATION` - Number of milliseconds the process will sleep between executions (default: 5000 ms)
 
 Related with the account used to interact with the Smart Contracts:
 - `SEED_PHRASE` - The mnemonic of the account to be used to interact with the Smart Contracts
