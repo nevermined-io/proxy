@@ -3,7 +3,7 @@
 nginx &
 
 # Preparing Rsyslog
-conf/rsyslog/51-upstream.template.conf /etc/rsyslog.d/51-upstream.conf
+cp conf/rsyslog/51-upstream.template.conf /etc/rsyslog.d/51-upstream.conf
 
 sed -i "s|PG_HOST|$PG_HOST|g" /etc/rsyslog.d/51-upstream.conf
 sed -i "s|PG_USER|$PG_USER|g" /etc/rsyslog.d/51-upstream.conf
