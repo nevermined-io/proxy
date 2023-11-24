@@ -14,6 +14,8 @@ ENV INTROSPECTION_URL "http://127.0.0.1:4000/introspect"
 
 RUN apk update && apk upgrade && \
     apk add --no-cache --virtual .build-deps \
+    util-linux \
+    openrc \
     nginx-mod-http-perl \
     curl \
     bash \
@@ -31,6 +33,8 @@ COPY conf/nginx/oauth2.js /etc/nginx/conf.d/oauth2.js
 
 # Preparing Rsyslog
 COPY conf/rsyslog/51-upstream.template.conf /etc/rsyslog.d/51-upstream.conf
+
+RUN  rc-update add rsyslogd boot
 
 # Preparing OAuth Server
 COPY package.json ./

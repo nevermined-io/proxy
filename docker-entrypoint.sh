@@ -8,7 +8,7 @@ sed -i "s|PG_USER|$PG_USER|g" /etc/rsyslog.d/51-upstream.conf
 sed -i "s|PG_PASSWORD|$PG_PASSWORD|g" /etc/rsyslog.d/51-upstream.conf
 sed -i "s|PG_DB|$PG_DB|g" /etc/rsyslog.d/51-upstream.conf
 
-service rsyslog restart
+rc-service rsyslogd restart
 
 yarn start:oauth-server 
 
