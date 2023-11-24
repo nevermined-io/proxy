@@ -1,7 +1,7 @@
 {
   "name": "@nevermined-io/proxy",
   "description": "Nevermined Proxy to gatekeep access to the remote web services",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "main": "index.js",
   "keywords": [],
   "author": "Nevermined <root@nevermined.io>",
