@@ -34,8 +34,6 @@ COPY conf/nginx/oauth2.js /etc/nginx/conf.d/oauth2.js
 # Preparing Rsyslog
 COPY conf/rsyslog/51-upstream.template.conf /etc/rsyslog.d/51-upstream.conf
 
-RUN  rc-update add rsyslogd boot
-
 # Preparing OAuth Server
 COPY package.json ./
 COPY tsconfig* ./
