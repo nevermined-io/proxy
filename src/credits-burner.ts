@@ -1,4 +1,4 @@
-import { Account, DDO, NFTServiceAttributes, Nevermined, ServiceNFTAccess } from '@nevermined-io/sdk'
+import { Account, DDO, NFTServiceAttributes, Nevermined, ServiceNFTAccess, jsonReplacer } from '@nevermined-io/sdk'
 import { Client } from 'pg'
 import { ConfigEntry, getNVMConfig, postgresConfigTemplate } from './config'
 
@@ -202,7 +202,7 @@ const updateDBTransactions = async (pgClient: Client, inputTxs: TransactionsProc
   const nvmErrors: TransactionError[] = []
 
   for await (const tx of inputTxs.success) {
-    logger.debug(`Updating DB transaction: ${JSON.stringify(tx)}}`)
+    logger.debug(`Updating DB transaction: ${JSON.stringify(tx, jsonReplacer)}}`)
 
     try {      
       const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Done', "errorMessage" = '', "updatedAt" = NOW() WHERE c."logId" = '${tx.logId}'`
@@ -241,7 +241,7 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   
   try {
 
-    const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries}`
+    const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries} and status != 'Error' `
     logger.trace(`Cleanup transactions query: ${updateQuery}`)
     const result = await pgClient.query(updateQuery)
     if (result.rowCount > 0)
