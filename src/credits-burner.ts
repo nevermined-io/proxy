@@ -283,8 +283,15 @@ export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve
 const main = async () => {
   config = await getNVMConfig()
   const nvm = await loadNevermined(config, verbose)
-  const account = getAccount(config, nvm)
-  const zerodevSigner = await loadZerodevSigner(config.signer, config.zerodevProjectId)
+
+  let account: Account
+  let zerodevSigner: ZeroDevAccountSigner<'ECDSA'> | undefined
+  if (config.zerodevProjectId && config.zerodevProjectId !== '') {
+    zerodevSigner = await loadZerodevSigner(config.signer, config.zerodevProjectId)
+    account = await Account.fromZeroDevSigner(zerodevSigner)
+  } else {
+    account = getAccount(config, nvm)
+  }
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
