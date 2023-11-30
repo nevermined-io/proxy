@@ -81,7 +81,7 @@ const loadPostgresClient = async (postgresConfig: any): Client => {
   return postgresClient
 }
 
-const getTransacionBatches = async (pgClient: Client): Promise<any> => {
+const getTransactionBatches = async (pgClient: Client): Promise<any> => {
   try {
     const results = await pgClient.query(
       `SELECT * FROM public."serviceLogsQueue" WHERE status = 'Pending' AND retried < ${maxRetries}`,
@@ -286,6 +286,7 @@ const main = async () => {
 
   let account: Account
   let zerodevSigner: ZeroDevAccountSigner<'ECDSA'> | undefined
+
   if (config.zerodevProjectId && config.zerodevProjectId !== '') {
     zerodevSigner = await loadZerodevSigner(config.signer, config.zerodevProjectId)
     account = await Account.fromZeroDevSigner(zerodevSigner)
@@ -297,7 +298,7 @@ const main = async () => {
   while (true) {
     const pgClient = await loadPostgresClient(postgresConfigTemplate)
 
-    const batches = await getTransacionBatches(pgClient)
+    const batches = await getTransactionBatches(pgClient)
     const txs = await burnTransactions(nvm, batches, account, zerodevSigner)
 
     logger.trace(
