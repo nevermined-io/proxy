@@ -20,7 +20,6 @@ export const initializeMetrics = (debug = false) => {
   })
 
   const metricExporter = new OTLPMetricExporter({
-    url: process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     headers: {
       authorization: process.env.OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION,
     },
@@ -28,7 +27,7 @@ export const initializeMetrics = (debug = false) => {
   const metricReader = new PeriodicExportingMetricReader({
     exporter: metricExporter,
     // export metrics every 60secs
-    exportIntervalMillis: 60000,
+    exportIntervalMillis: 10000,
   })
 
   meterProvider.addMetricReader(metricReader)
