@@ -100,7 +100,6 @@ export async function loadZerodevSigner(
 
 export const getWalletFromJSON = (keyfilePath: string, password: string): Wallet | HDNodeWallet => {
   const data = fs.readFileSync(keyfilePath).toString()
-  //const keyfile = JSON.parse(data.toString())
   return ethers.Wallet.fromEncryptedJsonSync(data, password)
 }
 
