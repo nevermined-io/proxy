@@ -39,14 +39,14 @@
     "path-to-regexp": "^6.2.1",
     "pg": "^8.11.3",
     "pino": "^8.15.4",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "@zerodev/sdk": "^4.3.4"
   },
   "devDependencies": {
     "@types/node": "^20.1.0",
     "@types/pino": "^7.0.5",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
-    "@zerodev/sdk": "^4.3.4",
     "eslint": "^8.19.0",
     "eslint-config-nevermined": "^0.2.0",
     "eslint-config-next": "^12.3.1",
