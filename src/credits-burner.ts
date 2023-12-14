@@ -123,7 +123,7 @@ const burnTransactions = async (
         throw new Error(`Invalid DID: ${serviceDID}`)
       if (userId === undefined || userId === '') throw new Error(`Invalid userId: ${userId}`)
       if (upstreamStatus.startsWith('2') === false)
-        throw new Error(`Upstream Service didnt work so we don't charge credits for it`)
+        throw new Error(`Upstream Service didnt work so we dont charge credits for it`)
 
       // 2. Resolve the DDO from the DID
       logger.debug(`Resolving DID: ${serviceDID}`)
