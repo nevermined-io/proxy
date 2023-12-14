@@ -123,7 +123,7 @@ const burnTransactions = async (
         throw new Error(`Invalid DID: ${serviceDID}`)
       if (userId === undefined || userId === '') throw new Error(`Invalid userId: ${userId}`)
       if (upstreamStatus.startsWith('2') === false)
-        throw new Error(`Upstream Service didn't work so we don't charge credits for it`)
+        throw new Error(`Upstream Service didnt work so we don't charge credits for it`)
 
       // 2. Resolve the DDO from the DID
       logger.debug(`Resolving DID: ${serviceDID}`)
@@ -202,7 +202,7 @@ const burnTransactions = async (
       errors.push({
         logId: log.logId,
         errorCode: 'BURN-001',
-        errorMessage: (error as Error).message.replace("'", '').replace('"', ''),
+        errorMessage: (error as Error).message.replace(/[^\x20-\x7E]/g, ''),
       })
     }
   }
@@ -243,11 +243,11 @@ const updateDBTransactions = async (
 
     try {
       const updateQuery = `UPDATE public."serviceLogsQueue" as c SET retried = retried+1, "updatedAt" = NOW(), "errorMessage" = '${error.errorCode} ${error.errorMessage}' WHERE c."logId" = '${error.logId}'`
-      logger.debug(`Update Error Query: ${updateQuery}`)
+      logger.info(`Update Error Query: ${updateQuery}`)
       const result = await pgClient.query(updateQuery)
       logger.info(`DB transaction updated to Error: ${error.logId} with result ${result.rowCount}`)
     } catch (error) {
-      logger.warn(`Unable to update DB transaction to Error: ${error.logId}}`)
+      logger.warn(`Unable to update DB transaction to Error: ${error.message}}`)
       logger.warn(`ERROR: ${(error as Error).message}`)
     }
   }
