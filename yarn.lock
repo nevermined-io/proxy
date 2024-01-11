@@ -551,16 +551,16 @@
   resolved "https://registry.yarnpkg.com/@microsoft/tsdoc/-/tsdoc-0.14.2.tgz#c3ec604a0b54b9a9b87e9735dfc59e1a5da6a5fb"
   integrity sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==
 
-"@nevermined-io/sdk@2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@nevermined-io/sdk/-/sdk-2.0.5.tgz#6028738b1862be9fb9cb72d1b6efe121935fcc13"
-  integrity sha512-sJPvKTQjUyt5F7xupVxT432kLjF0vg5LnKZ/KQYTjnz1wE9pZVAP4i5hIdLFxygdGxLjMkWoMD/lfhRtzMBv3Q==
+"@nevermined-io/sdk@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@nevermined-io/sdk/-/sdk-2.1.0.tgz#ed84d3bd2ab0ea6b04aa09d6d64f912cbf586763"
+  integrity sha512-eB7xSsqfTVNMnSECj9TYwhw1httmtjqmSJpmYjUwYB8aYqifR5MnfvxSzsDk6LymP6sRVdSAwdjjwce0mb4OZw==
   dependencies:
     "@alchemy/aa-core" "0.1.1"
     "@apollo/client" "^3.7.16"
     "@turnkey/ethers" "^0.18.3"
     "@turnkey/viem" "^0.3.4"
-    "@zerodev/sdk" "^4.3.3"
+    "@zerodev/sdk" "^4.5.5"
     assert "^2.0.0"
     cross-fetch "^4.0.0"
     crypto-browserify "^3.12.0"
@@ -1269,10 +1269,10 @@
   dependencies:
     tslib "^2.3.0"
 
-"@zerodev/sdk@^4.3.3", "@zerodev/sdk@^4.3.4":
-  version "4.3.4"
-  resolved "https://registry.yarnpkg.com/@zerodev/sdk/-/sdk-4.3.4.tgz#56f27929cff6dc2c47751c70ff53c1f846a27690"
-  integrity sha512-Rz49GzMR1A80AmUBPAz2UQxSWRHMHRerzbxlqXn3L3g5Dtcj2g0lnc0re7cptJmzdXcfgIjzY70LQz4neB3EHQ==
+"@zerodev/sdk@^4.5.5":
+  version "4.5.5"
+  resolved "https://registry.yarnpkg.com/@zerodev/sdk/-/sdk-4.5.5.tgz#9c8c696d7c4236c6eefcfbc893b2ff18b9eb7279"
+  integrity sha512-8Naj6N1RG8GGs399L3GeCf1hf67FICqMeWh2Mns1GEcvAROz6B56QLysjY2LQItD9zG1icTcdzDian2UXZkxDg==
   dependencies:
     "@alchemy/aa-core" "0.1.0-alpha.23"
     "@alchemy/aa-ethers" "0.1.0-alpha.23"
