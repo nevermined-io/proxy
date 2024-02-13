@@ -191,9 +191,15 @@ const burnTransactions = async (
           })
           results.push({ logId: log.logId, creditsBurned: adjustedCredits, message: 'Burned' })
         } else {
-          throw new Error(
-            `User ${userId} does not have enough credits to burn ${creditsFromHeader} credits on DID ${serviceDID}`,
+
+          logger.warn(
+            `User ${userId} does not have enough credits to burn ${creditsFromHeader} credits on DID ${serviceDID}, burning remaining balance: ${userBalance}`,
           )
+          await nvm.nfts1155.burnFromHolder(userId, tokenId, userBalance, account, {
+            zeroDevSigner: zerodevSigner,
+          })
+          results.push({ logId: log.logId, creditsBurned: userBalance, message: 'Burned' })
+          
         }
       }
     } catch (error) {
