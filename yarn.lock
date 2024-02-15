@@ -551,10 +551,10 @@
   resolved "https://registry.yarnpkg.com/@microsoft/tsdoc/-/tsdoc-0.14.2.tgz#c3ec604a0b54b9a9b87e9735dfc59e1a5da6a5fb"
   integrity sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==
 
-"@nevermined-io/sdk@2.1.3":
-  version "2.1.3"
-  resolved "https://registry.yarnpkg.com/@nevermined-io/sdk/-/sdk-2.1.3.tgz#d8b9c11a6761eadade19adf3804b5195951f4663"
-  integrity sha512-MriA6uBpeqQifcVDdO5Su5j5QGdH02pNs/DhpUeyp2mqw7gy8uOTUGj1Mgwg5V+dwLTNDXgOgmN1RHppqwldJg==
+"@nevermined-io/sdk@2.2.0-rc1":
+  version "2.2.0-rc1"
+  resolved "https://registry.yarnpkg.com/@nevermined-io/sdk/-/sdk-2.2.0-rc1.tgz#d5717c31f7784e7f780212c46dfaedd87e845f5f"
+  integrity sha512-Hv9T5WETVrjjBrtpB6yvPnT/Hzmk1GoC1QI6Z6VXroDLOEcJm2Mst/wF9uRwmtxwk3diQvPqh0MBLQgf3IWFyQ==
   dependencies:
     "@alchemy/aa-core" "0.1.1"
     "@apollo/client" "^3.7.16"

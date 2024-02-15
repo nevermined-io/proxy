@@ -1,5 +1,6 @@
 import {
   Account,
+  ChargeType,
   DDO,
   NFTServiceAttributes,
   Nevermined,
@@ -156,8 +157,10 @@ const burnTransactions = async (
         )
       }
 
+      const chargeType = nftAccess.attributes.main.subscription?.chargeType ? nftAccess.attributes.main.subscription?.chargeType : ChargeType.Fixed
       const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
         nftAccess.attributes.main.nftAttributes,
+        chargeType,
         creditsFromHeader,
       )
 
@@ -181,6 +184,7 @@ const burnTransactions = async (
           NFTServiceAttributes.isCreditsBalanceEnough(
             nftAccess.attributes.main.nftAttributes,
             userBalance,
+            creditsFromHeader
           )
         ) {
           logger.info(
