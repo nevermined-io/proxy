@@ -2,12 +2,13 @@
 import { initializeMetrics, OTEL_SERVICE_NAMESPACE } from './metrics'
 initializeMetrics(process.env.OTEL_METRICS_DEBUG === 'true')
 
-import { DDO, DID } from '@nevermined-io/sdk'
+import { DDO, DID, didPrefixed, ServiceNFTAccess, SubscriptionType, zeroX } from '@nevermined-io/sdk'
 import express from 'express'
 import { jwtDecrypt, JWTPayload } from 'jose'
 import { match } from 'path-to-regexp'
 import fetch from 'node-fetch'
 import { metrics } from '@opentelemetry/api'
+import { ethers } from 'ethers'
 
 const meter = metrics.getMeter('oauth-server')
 const metricName = process.env.OTEL_METRIC_NAME || 'oauth_server.webservice.counter'
@@ -42,9 +43,16 @@ const JWT_SECRET = Uint8Array.from(JWT_SECRET_PHRASE.split('').map((x) => parseI
 const MARKETPLACE_API_URI =
   process.env.MARKETPLACE_API_URI || 'https://marketplace.nevermined.localnet'
 
+const WEB3_PROVIDER_URL = process.env.WEB3_PROVIDER_URL || 'http://contracts.nevermined.localnet'
+
 // Required because we are dealing with self signed certificates locally
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
+const nft1155ShortABI = [
+  "function balanceOf(address account, uint256 id) view returns (uint256)",  
+]
+
+const web3Provider = new ethers.JsonRpcProvider(WEB3_PROVIDER_URL)
 
 const validateAuthorization = async (authorizationHeader) => {
   const tokens = authorizationHeader.split(' ')
@@ -101,6 +109,49 @@ const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
   return payload
 }
 
+const validateSubscriptionByType = async (payload: JWTPayload): Promise<boolean> => {
+  try {
+    const serviceDid = payload.did
+    const tokenId = zeroX(payload.subscriptionDid as string)
+    const subscriptionDID = didPrefixed(payload.subscriptionDid as string)
+
+    logger.debug(`Fetching subscription: ${subscriptionDID}`)
+    const subscriptionDDOResponse = await fetch(`${MARKETPLACE_API_URI}/api/v1/metadata/assets/ddo/${subscriptionDID}`)
+    logger.debug(`Subscription resolve Status: ${subscriptionDDOResponse.status}`)
+    const subscriptionDDO = DDO.deserialize(await subscriptionDDOResponse.text())
+    const subscriptionMetadata = subscriptionDDO.findServiceByReference('metadata')
+
+    const subscriptionType = subscriptionMetadata.attributes.main.subscription?.subscriptionType ? subscriptionMetadata.attributes.main.subscription?.subscriptionType : SubscriptionType.Time
+    logger.debug(`Subscription Type: ${subscriptionType}`)
+    if (subscriptionType === SubscriptionType.Time)
+      return true
+
+    const serviceDDOResponse = await fetch(`${MARKETPLACE_API_URI}/api/v1/metadata/assets/ddo/${serviceDid}`)
+    logger.debug(`Service resolve Status: ${serviceDDOResponse.status}`)
+  
+    const serviceDDO = DDO.deserialize(await serviceDDOResponse.text())
+    const serviceAccess = serviceDDO.findServiceByReference('nft-access')
+    const nftContractAddress = DDO.getNftContractAddressFromService(serviceAccess as ServiceNFTAccess)
+
+    logger.debug(JSON.stringify(serviceAccess.attributes.main.nftAttributes))
+    
+    const minCreditsRequired = serviceAccess.attributes.main.nftAttributes?.minCreditsRequired ? BigInt(serviceAccess.attributes.main.nftAttributes?.minCreditsRequired as string) : 1n
+    let userBalance = 0n
+    
+    logger.debug(`Checking user balance for ${payload.userId} in contract ${nftContractAddress} for DID ${subscriptionDID}`)
+    const nft1155Contract = new ethers.Contract(nftContractAddress, nft1155ShortABI, web3Provider)    
+    userBalance = await nft1155Contract.balanceOf(payload.userId, tokenId)
+
+    logger.debug(`User balance: ${userBalance} minCreditsRequired: ${minCreditsRequired}`)
+    return (userBalance >= minCreditsRequired)
+
+
+  } catch (err) {
+    throw new Error(`Problem validating subscription type: ${(err as Error).message}`)
+  }
+  
+}
+
 app.get('/', (req, res) => {
   res.send('Oauth server')
 })
@@ -115,7 +166,18 @@ app.post('/introspect', async (req, res) => {
     if (req.headers[NVM_AUTHORIZATION_HEADER]) {
       const userJwt = req.headers[NVM_AUTHORIZATION_HEADER]
 
+      // Validate the JWT and check if it's not expired
       const payload = await getJwtPayload(userJwt, urlRequested)
+
+      // If the subscription associated to the service is credits based, we check if the user has enough credits
+      // Service DID: payload.did
+      const isRequestValid = await validateSubscriptionByType(payload)
+      if (!isRequestValid) {
+        logger.info(`Request not valid for subscription type`)
+        res.writeHead(401)
+        res.end()
+        return
+      }
 
       // Compose authorized response
       // Getting the access token from the JWT message
@@ -258,4 +320,5 @@ app.post('/introspect', async (req, res) => {
 
 app.listen(SERVER_PORT, SERVER_HOST, () => {
   logger.info(`OAuth server listening on port ${SERVER_PORT}`)
+  logger.debug(`Debug mode enabled`)
 })
