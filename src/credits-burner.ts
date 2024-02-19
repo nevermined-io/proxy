@@ -137,6 +137,8 @@ const burnTransactions = async (
       const subscriptionDID = `did:nv:${tokenId}`
       const ddoOwner = await nvm.assets.owner(subscriptionDID)
 
+      const serviceMetadata = ddo.findServiceByReference('metadata')
+
       if (ddoContractAddress !== activeContractAddress) {
         logger.debug(`Loading NFT from address: ${ddoContractAddress}`)
         await nvm.contracts.loadNft1155(ddoContractAddress)
@@ -161,7 +163,7 @@ const burnTransactions = async (
 
       logger.debug(`Default credits to burn: ${creditsFromHeader}, pending to validate DDO ...`)
 
-      const chargeType = nftAccess.attributes.main.webService?.chargeType ? nftAccess.attributes.main.webService?.chargeType : ChargeType.Fixed
+      const chargeType = serviceMetadata.attributes.main.webService?.chargeType ? serviceMetadata.attributes.main.webService?.chargeType : ChargeType.Fixed
       const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
         nftAccess.attributes.main.nftAttributes,
         chargeType,
