@@ -161,14 +161,14 @@ const burnTransactions = async (
 
       logger.debug(`Default credits to burn: ${creditsFromHeader}, pending to validate DDO ...`)
 
-      const chargeType = nftAccess.attributes.main.subscription?.chargeType ? nftAccess.attributes.main.subscription?.chargeType : ChargeType.Fixed
+      const chargeType = nftAccess.attributes.main.webService?.chargeType ? nftAccess.attributes.main.webService?.chargeType : ChargeType.Fixed
       const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
         nftAccess.attributes.main.nftAttributes,
         chargeType,
         creditsFromHeader,
       )
 
-      logger.debug(`Credits requested to burn (by upstream service): ${creditsFromHeader}`)
+      logger.debug(`Credits requested to burn (by upstream service): ${creditsFromHeader} with chargeType: ${chargeType}`)
       logger.debug(`Adjusted Amount to burn: ${adjustedCredits}`)
 
       if (userId.toLowerCase() === ddoOwner.toLowerCase()) {
