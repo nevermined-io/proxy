@@ -16,13 +16,14 @@ const counter = meter.createCounter(metricName, {
   description: 'The number of requests to web services',
 })
 
+const verbose = process.env.VERBOSE === 'true'
+
 const app = express()
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('pino')({  
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  level: verbose ? 'debug' : 'info',
 })
-
 
 // By default we only listen into localhost
 // The proxy server will connect from the same host so we protect the oauth server
@@ -121,7 +122,7 @@ const validateSubscriptionByType = async (payload: JWTPayload): Promise<boolean>
     const subscriptionDDO = DDO.deserialize(await subscriptionDDOResponse.text())
     const subscriptionMetadata = subscriptionDDO.findServiceByReference('metadata')
 
-    const subscriptionType = subscriptionMetadata.attributes.main.subscription?.subscriptionType ? subscriptionMetadata.attributes.main.subscription?.subscriptionType : SubscriptionType.Time
+    const subscriptionType = subscriptionMetadata.attributes.main.subscription?.subscriptionType ? subscriptionMetadata.attributes.main.subscription?.subscriptionType : SubscriptionType.Credits
     logger.debug(`Subscription Type: ${subscriptionType}`)
     if (subscriptionType === SubscriptionType.Time)
       return true

@@ -18,7 +18,7 @@ const maxRetries = process.env.MAX_RETRIES || 3
 const sleepDuration = Number(process.env.SLEEP_DURATION) || 5000
 
 const logger = pino({
-  level: verbose ? 'info' : 'debug',
+  level: verbose ? 'debug' : 'info',
 })
 
 let config: ConfigEntry
@@ -149,13 +149,17 @@ const burnTransactions = async (
         if (
           logEntry.upstream_http_NVMCreditsConsumed !== undefined &&
           BigInt(logEntry.upstream_http_NVMCreditsConsumed)
-        )
+        ) {
+          logger.debug(`Fould "upstream_http_NVMCreditsConsumed" header in log entry: ${logEntry.upstream_http_NVMCreditsConsumed}`)
           creditsFromHeader = BigInt(logEntry.upstream_http_NVMCreditsConsumed)
+        }
       } catch (error) {
         logger.warn(
           `Unable to parse credits from header: ${logEntry.upstream_http_NVMCreditsConsumed}`,
         )
       }
+
+      logger.debug(`Default credits to burn: ${creditsFromHeader}, pending to validate DDO ...`)
 
       const chargeType = nftAccess.attributes.main.subscription?.chargeType ? nftAccess.attributes.main.subscription?.chargeType : ChargeType.Fixed
       const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
@@ -194,6 +198,11 @@ const burnTransactions = async (
             zeroDevSigner: zerodevSigner,
           })
           results.push({ logId: log.logId, creditsBurned: adjustedCredits, message: 'Burned' })
+        } else if (userBalance === 0n) {
+          logger.warn(
+            `User ${userId} does not have any balance to burn: ${userBalance} credits on DID ${serviceDID}, this request had to be blocked by the proxy`,
+          )
+          results.push({ logId: log.logId, creditsBurned: 0n, message: 'Insufficient Funds' })
         } else {
 
           logger.warn(
