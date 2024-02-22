@@ -106,7 +106,7 @@ const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
     throw new Error(`${urlRequested.origin} not in ${payload.endpoints}`)
   }
 
-  payload.hostname = urlMatching.hostname
+  payload.hostname = urlMatching.host
   return payload
 }
 
