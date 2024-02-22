@@ -100,7 +100,7 @@ const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
 
   // 2. The URL requested is granted
 
-  logger.debug(`JWT Validating endpoints ${JSON.stringify(payload.endpoints)}}`)
+  logger.debug(`JWT Validating endpoints ${JSON.stringify(payload.endpoints)} with url requested: ${urlRequested}`)
   const { matches, urlMatching } = urlMatches(payload.endpoints, urlRequested)
   if (!matches) {
     throw new Error(`${urlRequested.origin} not in ${payload.endpoints}`)
@@ -129,8 +129,14 @@ const validateSubscriptionByType = async (payload: JWTPayload): Promise<boolean>
 
     const serviceDDOResponse = await fetch(`${MARKETPLACE_API_URI}/api/v1/metadata/assets/ddo/${serviceDid}`)
     logger.debug(`Service resolve Status: ${serviceDDOResponse.status}`)
-  
     const serviceDDO = DDO.deserialize(await serviceDDOResponse.text())
+    
+    logger.debug(`Checking if the owner of the service (${payload.owner}) is making the request`)
+    if (payload.owner === serviceDDO.proof.creator || payload.owner === serviceDDO.publicKey[0].owner) {
+      logger.debug(`Owner of the service making a request, letting it pass`)
+      return true  
+    }
+
     const serviceAccess = serviceDDO.findServiceByReference('nft-access')
     const nftContractAddress = DDO.getNftContractAddressFromService(serviceAccess as ServiceNFTAccess)
 
