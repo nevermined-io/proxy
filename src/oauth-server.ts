@@ -1,20 +1,9 @@
-// initialize metrics before all else
-import { initializeMetrics, OTEL_SERVICE_NAMESPACE } from './metrics'
-initializeMetrics(process.env.OTEL_METRICS_DEBUG === 'true')
-
-import { DDO, DID, didPrefixed, ServiceNFTAccess, SubscriptionType, zeroX } from '@nevermined-io/sdk'
+import { DDO, DID, didPrefixed, ServiceNFTAccess, SubscriptionType, ZeroAddress, zeroX } from '@nevermined-io/sdk'
 import express from 'express'
 import { jwtDecrypt, JWTPayload } from 'jose'
 import { match } from 'path-to-regexp'
 import fetch from 'node-fetch'
-import { metrics } from '@opentelemetry/api'
 import { ethers } from 'ethers'
-
-const meter = metrics.getMeter('oauth-server')
-const metricName = process.env.OTEL_METRIC_NAME || 'oauth_server.webservice.counter'
-const counter = meter.createCounter(metricName, {
-  description: 'The number of requests to web services',
-})
 
 const verbose = process.env.VERBOSE === 'true'
 
@@ -43,6 +32,11 @@ const JWT_SECRET = Uint8Array.from(JWT_SECRET_PHRASE.split('').map((x) => parseI
 
 const MARKETPLACE_API_URI =
   process.env.MARKETPLACE_API_URI || 'https://marketplace.nevermined.localnet'
+
+const BACKEND_API_URI =
+  process.env.BACKEND_API_URI || 'http://localhost:3001'
+
+const BACKEND_AUTH_TOKEN = process.env.BACKEND_AUTH_TOKEN || ''
 
 const WEB3_PROVIDER_URL = process.env.WEB3_PROVIDER_URL || 'http://contracts.nevermined.localnet'
 
@@ -159,15 +153,73 @@ const validateSubscriptionByType = async (payload: JWTPayload): Promise<boolean>
   
 }
 
+const registerServiceAccess = async (did, owner, consumer, endpoint, upstreamStatus, nvmCredits) => {
+  
+  const requestBody = {
+    did,
+    owner,
+    consumer,
+    assetType: 'Service',
+    endpoint,
+    accessResult: upstreamStatus,
+    nvmCredits
+  }
+  logger.info(`/access_tx :: registerServiceAccess ${JSON.stringify(requestBody)}`)
+  return fetch(`${BACKEND_API_URI}/api/v1/metrics/asset/access`, {
+    method: 'post',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${BACKEND_AUTH_TOKEN}`
+    },
+    body: JSON.stringify(requestBody)
+  })
+}
+
 app.get('/', (req, res) => {
   res.send('Oauth server')
 })
 
+
+app.post('/access_tx', async (req, res) => {
+  try {
+    logger.trace(`/access_tx`)
+    const scope = req.headers['nvm-scope']
+    const owner = req.headers['nvm-owner']
+    const userId = req.headers['nvm-consumer']
+    const endpoint = req.headers['nvm-requested-url']
+    const upstreamStatus = req.headers['nvm-upstream-status'] || 200
+    const nvmCredits = req.headers['nvm-credits-consumed'] || 0
+    
+    const serviceResponse = await registerServiceAccess(scope, owner, userId, endpoint, upstreamStatus, nvmCredits)
+    logger.info(`/access_tx :: response: ${JSON.stringify(serviceResponse)}`)
+  } catch (error) {
+    logger.warn(`Error tracking access: ${(error as Error).message}`)
+    res.writeHead(401)
+    res.end()
+    return
+  }
+
+  res.writeHead(200)
+  res.end()
+  return
+})
+
+
 app.post('/introspect', async (req, res) => {
   logger.trace(` Headers: ${JSON.stringify(req.headers)}`)
 
-  const urlRequested = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
-  logger.debug(`URL Requested: ${urlRequested}`)
+  let urlRequested
+  try {
+    urlRequested = new URL(req.headers[NVM_REQUESTED_URL_HEADER])
+    logger.debug(`URL Requested: ${urlRequested}`)
+  } catch (error) {
+    logger.warn(`Invalid URL requested: ${(error as Error).message}`)
+    res.writeHead(401)
+    res.end()
+    return
+  }
+  
 
   try {
     if (req.headers[NVM_AUTHORIZATION_HEADER]) {
@@ -210,6 +262,7 @@ app.post('/introspect', async (req, res) => {
       const response = {
         active: true,
         user_id: payload.userId,
+        owner: payload.owner,
         auth_type: payload.headers.authentication.type,
         upstream_host: payload.hostname,
         scope: payload.did,
@@ -218,14 +271,7 @@ app.post('/introspect', async (req, res) => {
         ercType: payload.ercType,
       }
 
-      counter.add(1, {
-        did: payload.did,
-        owner: payload.owner,
-        access_date: new Date().toISOString(),
-        consumer: payload.userId,
-        endpoint: payload.hostname,
-        namespace: OTEL_SERVICE_NAMESPACE,
-      })
+      // await registerServiceAccess(payload.did, payload.owner, payload.userId, payload.hostname, 1)
       logger.info(`Response: ${response.active} for ${response.scope}`)
 
       res.send({
@@ -254,7 +300,7 @@ app.post('/introspect', async (req, res) => {
   let matches = false
   let scope = ''
   let upstreamHost = ''
-  let owner: string
+  let owner: string = ZeroAddress
   try {
     const subdomain = urlRequested.hostname.split('.')[0]
     logger.debug(`Subdomain: ${subdomain}`)
@@ -297,6 +343,7 @@ app.post('/introspect', async (req, res) => {
   if (matches) {
     const response = {
       active: true,
+      owner,
       user_id: '',
       auth_type: 'none',
       auth_header: '',
@@ -307,12 +354,7 @@ app.post('/introspect', async (req, res) => {
       iat: '',
     }
 
-    counter.add(1, {
-      did: scope,
-      owner: owner,
-      endpoint: upstreamHost,
-      namespace: OTEL_SERVICE_NAMESPACE,
-    })
+    // await registerServiceAccess(scope, owner, ZeroAddress, upstreamHost, 0)
 
     logger.debug(`OPEN URL RESPONSE:\n${JSON.stringify(response)}`)
     res.send(response)
