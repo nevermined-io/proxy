@@ -147,15 +147,13 @@ const burnTransactions = async (
       }
 
       try {
-        if (nvmCredits !== undefined && BigInt(nvmCredits)) {          
-          nvmCredits = BigInt(nvmCredits)
-        }
+        nvmCredits = BigInt(nvmCredits)
+        nvmCredits = nvmCredits < 0n ? undefined : nvmCredits
       } catch (error) {
-        logger.warn(
-          `Unable to parse credits: ${tx.nvmCredits}`,
-        )
+        logger.warn(`Unable to parse credits: ${tx.nvmCredits}`)
       }
 
+      
       logger.debug(`Default credits to burn: ${nvmCredits}, pending to validate DDO ...`)
 
       const chargeType = serviceMetadata.attributes.main.webService?.chargeType ? serviceMetadata.attributes.main.webService?.chargeType : ChargeType.Fixed

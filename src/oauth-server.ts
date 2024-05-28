@@ -189,7 +189,7 @@ app.post('/access_tx', async (req, res) => {
     const userId = req.headers['nvm-consumer']
     const endpoint = req.headers['nvm-requested-url']
     const upstreamStatus = req.headers['nvm-upstream-status'] || 200
-    const nvmCredits = req.headers['nvm-credits-consumed'] || 0
+    const nvmCredits = req.headers['nvm-credits-consumed'] || -1
     
     const serviceResponse = await registerServiceAccess(scope, owner, userId, endpoint, upstreamStatus, nvmCredits)
     logger.info(`/access_tx :: response: ${JSON.stringify(serviceResponse)}`)
