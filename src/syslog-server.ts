@@ -85,7 +85,6 @@ server.start(options).then(
   () => {
     logger.info(`Server started ${SYSLOG_SERVER_HOST}:${SYSLOG_SERVER_PORT}`)
   }
-).catch((error) => { // If you don't specify any option and leave it as black, the server will listen on 514, 0.0.0.0 and exclusice
-  console.log(error)
+).catch((error) => { // If you don't specify any option and leave it as black, the server will listen on 514, 0.0.0.0 and exclusice  
   logger.error('Failed to start server:', error)
 })
