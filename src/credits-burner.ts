@@ -29,13 +29,13 @@ interface TransactionsProcessed {
 }
 
 interface TransactionSuccess {
-  logId: string
+  atxId: string
   creditsBurned: string
   message?: string
 }
 
 interface TransactionError {
-  logId: string
+  atxId: string
   errorCode: string
   errorMessage: string
 }
@@ -85,13 +85,13 @@ const loadPostgresClient = async (postgresConfig: any): Client => {
 const getTransactionBatches = async (pgClient: Client): Promise<any> => {
   try {
     const results = await pgClient.query(
-      `SELECT * FROM public."serviceLogsQueue" WHERE status = 'Pending' AND retried < ${maxRetries}`,
+      `SELECT * FROM public."accessTransactions" as txs, public."accessProcessorQueue" as queue WHERE queue.status = 'Pending' AND retried < ${maxRetries} AND txs."atxId" = queue."atxId" ORDER BY queue."createdAt" `,
     )
-    logger.info(`Logs Found: ${results.rows.length}`)
+    logger.info(`Access txs Found: ${results.rows.length}`)
 
     return results.rows
   } catch (error) {
-    logger.error(`Unable to get Transaction batches from database`)
+    logger.error(`Unable to get Access Transaction batches from database`)
     logger.error(`ERROR: ${(error as Error).message}`)
     process.exit(1)
   }
@@ -99,7 +99,7 @@ const getTransactionBatches = async (pgClient: Client): Promise<any> => {
 
 const burnTransactions = async (
   nvm: Nevermined,
-  logs: any[],
+  txs: any[],
   account: Account,
   zerodevSigner?: ZeroDevAccountSigner<'ECDSA'>,
 ): Promise<TransactionsProcessed> => {
@@ -109,21 +109,20 @@ const burnTransactions = async (
 
   logger.trace(`Using account: ${account.getId()}`)
 
-  for await (const log of logs) {
-    logger.info(`Processing (burn) transaction: ${log.logId}`)
+  for await (const tx of txs) {
+    logger.info(`Processing (burn) transaction: ${tx.atxId}`)
 
     try {
-      // 1. Get the DID from the log
-      const logEntry = JSON.parse(log.logLine)
-      const serviceDID = logEntry.scope
-      const userId = logEntry.user_id
-      const upstreamStatus = logEntry.upstream_status
-      let creditsFromHeader: bigint = undefined
+      // 1. Get the DID from the tx
+      const serviceDID = tx.did
+      const consumer = tx.consumer
+      const upstreamStatus = tx.accessResult
+      let nvmCredits: bigint
 
       if (serviceDID === undefined || serviceDID === '')
         throw new Error(`Invalid DID: ${serviceDID}`)
-      if (userId === undefined || userId === '') throw new Error(`Invalid userId: ${userId}`)
-      if (upstreamStatus.startsWith('2') === false)
+      if (consumer === undefined || consumer === '') throw new Error(`Invalid consumer: ${consumer}`)
+      if (upstreamStatus.toString().startsWith('2') === false)
         throw new Error(`Upstream Service didnt work so we dont charge credits for it`)
 
       // 2. Resolve the DDO from the DID
@@ -148,41 +147,35 @@ const burnTransactions = async (
       }
 
       try {
-        if (
-          logEntry.upstream_http_NVMCreditsConsumed !== undefined &&
-          BigInt(logEntry.upstream_http_NVMCreditsConsumed)
-        ) {
-          logger.debug(`Fould "upstream_http_NVMCreditsConsumed" header in log entry: ${logEntry.upstream_http_NVMCreditsConsumed}`)
-          creditsFromHeader = BigInt(logEntry.upstream_http_NVMCreditsConsumed)
-        }
+        nvmCredits = BigInt(nvmCredits)
+        nvmCredits = nvmCredits < 0n ? undefined : nvmCredits
       } catch (error) {
-        logger.warn(
-          `Unable to parse credits from header: ${logEntry.upstream_http_NVMCreditsConsumed}`,
-        )
+        logger.warn(`Unable to parse credits: ${tx.nvmCredits}`)
       }
 
-      logger.debug(`Default credits to burn: ${creditsFromHeader}, pending to validate DDO ...`)
+      
+      logger.debug(`Default credits to burn: ${nvmCredits}, pending to validate DDO ...`)
 
       const chargeType = serviceMetadata.attributes.main.webService?.chargeType ? serviceMetadata.attributes.main.webService?.chargeType : ChargeType.Fixed
       const adjustedCredits = NFTServiceAttributes.getCreditsToCharge(
         nftAccess.attributes.main.nftAttributes,
         chargeType,
-        creditsFromHeader,
+        nvmCredits,
       )
 
-      logger.debug(`Credits requested to burn (by upstream service): ${creditsFromHeader} with chargeType: ${chargeType}`)
+      logger.debug(`Credits requested to burn (by upstream service): ${nvmCredits} with chargeType: ${chargeType}`)
       logger.debug(`Adjusted Amount to burn: ${adjustedCredits}`)
 
-      if (userId.toLowerCase() === ddoOwner.toLowerCase()) {
+      if (consumer.toLowerCase() === ddoOwner.toLowerCase()) {
         logger.info(`Skipping DID ${serviceDID} because it is called by the owner`)
-        results.push({ logId: log.logId, creditsBurned: 0n, message: 'Call by owner' })
+        results.push({ atxId: tx.atxId, creditsBurned: 0n, message: 'Call by owner' })
       } else if (adjustedCredits === undefined || adjustedCredits < 1n) {
         // The NFT Access Service is a free service
         logger.info(`Skipping DID ${serviceDID} because it is a free service`)
-        results.push({ logId: log.logId, creditsBurned: 0n, message: 'Free Service' })
+        results.push({ atxId: tx.atxId, creditsBurned: 0n, message: 'Free Service' })
       } else {
-        const userBalance = await nvm.nfts1155.balance(subscriptionDID, userId)
-        logger.debug(`User [${userId}] balance: ${userBalance} for tokenId: ${tokenId}`)
+        const userBalance = await nvm.nfts1155.balance(subscriptionDID, consumer)
+        logger.debug(`User [${consumer}] balance: ${userBalance} for tokenId: ${tokenId}`)
 
         // 5. Burn the NFT
         logger.debug(`Credits to burn: ${adjustedCredits} from subscription: ${subscriptionDID}`)
@@ -190,38 +183,38 @@ const burnTransactions = async (
           NFTServiceAttributes.isCreditsBalanceEnough(
             nftAccess.attributes.main.nftAttributes,
             userBalance,
-            creditsFromHeader
+            nvmCredits
           )
         ) {
           logger.info(
-            `Burning ${adjustedCredits} credits from user ${userId} on DID ${subscriptionDID} using account ${account.getId()}`,
+            `Burning ${adjustedCredits} credits from user ${consumer} on DID ${subscriptionDID} using account ${account.getId()}`,
           )
-          await nvm.nfts1155.burnFromHolder(userId, tokenId, adjustedCredits, account, {
+          await nvm.nfts1155.burnFromHolder(consumer, tokenId, adjustedCredits, account, {
             zeroDevSigner: zerodevSigner,
           })
-          results.push({ logId: log.logId, creditsBurned: adjustedCredits, message: 'Burned' })
+          results.push({ atxId: tx.atxId, creditsBurned: adjustedCredits, message: 'Burned' })
         } else if (userBalance === 0n) {
           logger.warn(
-            `User ${userId} does not have any balance to burn: ${userBalance} credits on DID ${serviceDID}, this request had to be blocked by the proxy`,
+            `User ${consumer} does not have any balance to burn: ${userBalance} credits on DID ${serviceDID}, this request had to be blocked by the proxy`,
           )
-          results.push({ logId: log.logId, creditsBurned: 0n, message: 'Insufficient Funds' })
+          results.push({ atxId: tx.atxId, creditsBurned: 0n, message: 'Insufficient Funds' })
         } else {
 
           logger.warn(
-            `User ${userId} does not have enough credits to burn ${creditsFromHeader} credits on DID ${serviceDID}, burning remaining balance: ${userBalance}`,
+            `User ${consumer} does not have enough credits to burn ${nvmCredits} credits on DID ${serviceDID}, burning remaining balance: ${userBalance}`,
           )
-          await nvm.nfts1155.burnFromHolder(userId, tokenId, userBalance, account, {
+          await nvm.nfts1155.burnFromHolder(consumer, tokenId, userBalance, account, {
             zeroDevSigner: zerodevSigner,
           })
-          results.push({ logId: log.logId, creditsBurned: userBalance, message: 'Burned' })
+          results.push({ atxId: tx.atxId, creditsBurned: userBalance, message: 'Burned' })
           
         }
       }
     } catch (error) {
-      logger.warn(`Unable to process Nevermined transaction: ${log.logId}`)
+      logger.warn(`Unable to process Nevermined transaction: ${tx.atxId}`)
       logger.warn(`ERROR: ${(error as Error).message}`)
       errors.push({
-        logId: log.logId,
+        atxId: tx.atxId,
         errorCode: 'BURN-001',
         errorMessage: (error as Error).message.replace(/[^\x20-\x7E]/g, ''),
       })
@@ -243,16 +236,16 @@ const updateDBTransactions = async (
     logger.debug(`Updating DB transaction: ${JSON.stringify(tx, jsonReplacer)}}`)
 
     try {
-      const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Done', "errorMessage" = '', "updatedAt" = NOW() WHERE c."logId" = '${tx.logId}'`
+      const updateQuery = `UPDATE public."accessProcessorQueue" as c SET status = 'Done', "errorMessage" = '', "updatedAt" = NOW() WHERE c."atxId" = '${tx.atxId}'`
       logger.debug(`Update Query: ${updateQuery}`)
       const result = await pgClient.query(updateQuery)
-      logger.info(`DB transaction updated: ${tx.logId} with result ${result.rowCount}`)
-      txsProcessed.push({ logId: tx.logId, creditsBurned: tx.creditsBurned, message: tx.message })
+      logger.info(`DB transaction updated: ${tx.atxId} with result ${result.rowCount}`)
+      txsProcessed.push({ atxId: tx.atxId, creditsBurned: tx.creditsBurned, message: tx.message })
     } catch (error) {
-      logger.warn(`Unable to update DB transaction: ${tx.logId}`)
+      logger.warn(`Unable to update DB transaction: ${tx.atxId}`)
       logger.warn(`ERROR: ${(error as Error).message}`)
       nvmErrors.push({
-        logId: tx.logId,
+        atxId: tx.atxId,
         errorCode: 'UPDATE-001',
         errorMessage: (error as Error).message,
       })
@@ -260,13 +253,13 @@ const updateDBTransactions = async (
   }
 
   for await (const error of inputTxs.errors) {
-    logger.debug(`Updating DB Error transaction: ${error.logId}}`)
+    logger.debug(`Updating DB Error transaction: ${error.atxId}}`)
 
     try {
-      const updateQuery = `UPDATE public."serviceLogsQueue" as c SET retried = retried+1, "updatedAt" = NOW(), "errorMessage" = '${error.errorCode} ${error.errorMessage}' WHERE c."logId" = '${error.logId}'`
+      const updateQuery = `UPDATE public."accessProcessorQueue" as c SET retried = retried+1, "updatedAt" = NOW(), "errorMessage" = '${error.errorCode} ${error.errorMessage}' WHERE c."atxId" = '${error.atxId}'`
       logger.info(`Update Error Query: ${updateQuery}`)
       const result = await pgClient.query(updateQuery)
-      logger.info(`DB transaction updated to Error: ${error.logId} with result ${result.rowCount}`)
+      logger.info(`DB transaction updated to Error: ${error.atxId} with result ${result.rowCount}`)
     } catch (error) {
       logger.warn(`Unable to update DB transaction to Error: ${error.message}}`)
       logger.warn(`ERROR: ${(error as Error).message}`)
@@ -278,7 +271,7 @@ const updateDBTransactions = async (
 
 const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   try {
-    const updateQuery = `UPDATE public."serviceLogsQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries} and status != 'Error' `
+    const updateQuery = `UPDATE public."accessProcessorQueue" as c SET status = 'Error', "updatedAt" = NOW() WHERE retried >= ${maxRetries} and status != 'Error' `
     logger.trace(`Cleanup transactions query: ${updateQuery}`)
     const result = await pgClient.query(updateQuery)
     if (result.rowCount > 0) logger.info(`DB transaction cleanup with result ${result.rowCount}`)

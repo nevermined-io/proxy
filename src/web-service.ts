@@ -27,14 +27,15 @@ app.get('/private/hello', (req, res) => {
 
 app.get('/private/index', (req, res) => {
   if (req.headers['authorization'] != `Bearer ${AUTH_BEARER_TOKEN}`) {
-    console.log(`Invalid token: ${req.headers['authorization']}`)
+    console.log(`Invalid token: ${req.headers['authorization']} - ${JSON.stringify(req.headers)}`)
+    console.log(`Headers: ${JSON.stringify(req.headers)}`)
     res.status(401).send('Unauthorized!!!!')
     return
+  } else {
+    console.log(`Request Success! - ${req.url}`)
+    res.setHeader(HEADER_CREDITS_CONSUMED, '3') // This is the number of credits consumed by the request
+    res.send(`This should be private`)
   }
-  
-  res.setHeader(HEADER_CREDITS_CONSUMED, '3') // This is the number of credits consumed by the request
-  res.send(`This should be private`)
-  console.log(`Request Success! - ${req.url}`)
 })
 
 
@@ -66,7 +67,7 @@ app.get('/', (req, res) => {
   res.send(`Index`)
 })
 
-app.listen(SERVER_PORT, () => {
-  console.log(`Example app listening on port: ${SERVER_PORT}`)
+app.listen(SERVER_PORT, '0.0.0.0', () => {
+  console.log(`Example app listening on port: 0.0.0.0:${SERVER_PORT}`)
   console.log(`Using Bearer token "${AUTH_BEARER_TOKEN}" in private endpoints`)
 })

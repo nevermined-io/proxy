@@ -15,7 +15,6 @@
   - [How to run the Proxy](#how-to-run-the-proxy)
     - [Environment variables](#environment-variables)
     - [Running the NGINX Proxy via Docker](#running-the-nginx-proxy-via-docker)
-    - [Enabling metrics](#enabling-metrics)
   - [Demos](#demos)
     - [Demo using a standalone NGNIX](#demo-using-a-standalone-ngnix)
     - [OpenAI API demo](#openai-api-demo)
@@ -74,22 +73,6 @@ You can build it locally too and run it:
 docker build . -t nginx-proxy
 docker run -v $(pwd)/conf/certs:/ssl/certs -p 443:443 -p 3128:3128  -e "INTROSPECTION_URL=http://127.0.0.1:4000" nginx-proxy
 ```
-
-### Enabling metrics
-
-To send metrics to grafana use the following environment variables:
-
-- `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` - The endpoint where the metrics should be sent. Example `export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="https://otlp-gateway-prod-eu-west-0.grafana.net/otlp/v1/metrics"`
-- `OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION` - The authorization token to be included in the headers. Example `export OTEL_EXPORTER_OTLP_METRICS_AUTHORIZATION="Basic $(echo -n <grafana instance id>:<grafana api key> | base64 -w 0)"`
-- `OTEL_SERVICE_NAME` - The name of the service. Defaults to `oauth-server`
-- `OTEL_SERVICE_NAMESPACE` - The name of the namespace the service is currently deployed.
-- `OTEL_METRICS_DEBUG` - It set to `true` if will print metrics debug messages. Helpful to troubleshoot metrics problems.
-- `OTEL_METRIC_NAME` - The name that the metric will get
-
-For more information see:
-
-- [Push directly from applications using the OpenTelemetry SDKs](https://grafana.com/docs/grafana-cloud/data-configuration/otlp/send-data-otlp/#push-directly-from-applications-using-the-opentelemetry-sdks)
-- [Opentelemetry sdk configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/)
 
 ## Demos
 
@@ -193,6 +176,8 @@ The burner uses the following environment variables:
 - `ARTIFACTS` - The path where the Nevermined contracts artifacts can be found. If not given it will be the `artifacts` folder in the root path of the project.
 - `WEB3_PROVIDER_URL` - The URL of the Ethereum node
 - `MARKETPLACE_API_URL` - The URL of the Nevermined Marketplace API
+- `BACKEND_API_URI` - The URL of the Nevermined Backend API
+- `BACKEND_AUTH_TOKEN` - The token to authenticate with the Nevermined Backend API (requires to have **Admin** permissions)
 - `NVM_NODE_URL` - The URL of the Nevermined Node
 - `NODE_ADDRESS` - The Ethereum address of the Nevermined Node
 - `NETWORK_ID` - The Ethereum network id
