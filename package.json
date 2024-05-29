@@ -1,7 +1,7 @@
 {
   "name": "@nevermined-io/proxy",
   "description": "Nevermined Proxy to gatekeep access to the remote web services",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "main": "index.js",
   "keywords": [],
   "author": "Nevermined <root@nevermined.io>",
@@ -23,9 +23,11 @@
     "start:proxy": "node src/proxy.js",
     "start:web-service": "node dist/src/web-service.js",
     "start:oauth-server": "node dist/src/oauth-server.js",
+    "start:syslog-server": "node dist/src/syslog-server.js",
     "start:burner": "node dist/src/credits-burner.js",
     "dev:web-service": "ts-node src/web-service.ts",
     "dev:oauth-server": "ts-node src/oauth-server.ts",
+    "dev:syslog-server": "ts-node src/syslog-server.ts",
     "dev:burner": "ts-node src/credits-burner.ts"
   },
   "dependencies": {
@@ -37,6 +39,7 @@
     "path-to-regexp": "^6.2.1",
     "pg": "^8.11.3",
     "pino": "^8.15.4",
+    "syslog-server-ts": "0.4.2",
     "typescript": "^5.1.6",
     "@zerodev/sdk": "^4.5.5"
   },

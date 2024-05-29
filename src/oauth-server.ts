@@ -33,11 +33,6 @@ const JWT_SECRET = Uint8Array.from(JWT_SECRET_PHRASE.split('').map((x) => parseI
 const MARKETPLACE_API_URI =
   process.env.MARKETPLACE_API_URI || 'https://marketplace.nevermined.localnet'
 
-const BACKEND_API_URI =
-  process.env.BACKEND_API_URI || 'http://localhost:3001'
-
-const BACKEND_AUTH_TOKEN = process.env.BACKEND_AUTH_TOKEN || ''
-
 const WEB3_PROVIDER_URL = process.env.WEB3_PROVIDER_URL || 'http://contracts.nevermined.localnet'
 
 // Required because we are dealing with self signed certificates locally
@@ -153,56 +148,8 @@ const validateSubscriptionByType = async (payload: JWTPayload): Promise<boolean>
   
 }
 
-const registerServiceAccess = async (did, owner, consumer, endpoint, upstreamStatus, nvmCredits) => {
-  
-  const requestBody = {
-    did,
-    owner,
-    consumer,
-    assetType: 'Service',
-    endpoint,
-    accessResult: upstreamStatus,
-    nvmCredits
-  }
-  logger.info(`/access_tx :: registerServiceAccess ${JSON.stringify(requestBody)}`)
-  return fetch(`${BACKEND_API_URI}/api/v1/metrics/asset/access`, {
-    method: 'post',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${BACKEND_AUTH_TOKEN}`
-    },
-    body: JSON.stringify(requestBody)
-  })
-}
-
 app.get('/', (req, res) => {
   res.send('Oauth server')
-})
-
-
-app.post('/access_tx', async (req, res) => {
-  try {
-    logger.trace(`/access_tx`)
-    const scope = req.headers['nvm-scope']
-    const owner = req.headers['nvm-owner']
-    const userId = req.headers['nvm-consumer']
-    const endpoint = req.headers['nvm-requested-url']
-    const upstreamStatus = req.headers['nvm-upstream-status'] || 200
-    const nvmCredits = req.headers['nvm-credits-consumed'] || -1
-    
-    const serviceResponse = await registerServiceAccess(scope, owner, userId, endpoint, upstreamStatus, nvmCredits)
-    logger.info(`/access_tx :: response: ${JSON.stringify(serviceResponse)}`)
-  } catch (error) {
-    logger.warn(`Error tracking access: ${(error as Error).message}`)
-    res.writeHead(401)
-    res.end()
-    return
-  }
-
-  res.writeHead(200)
-  res.end()
-  return
 })
 
 
@@ -366,6 +313,8 @@ app.post('/introspect', async (req, res) => {
   res.end()
   return
 })
+
+
 
 app.listen(SERVER_PORT, SERVER_HOST, () => {
   logger.info(`OAuth server listening on port ${SERVER_PORT}`)

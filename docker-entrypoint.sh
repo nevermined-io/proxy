@@ -10,6 +10,7 @@ sed -i "s|PG_DB|$PG_DB|g" /etc/rsyslog.d/51-upstream.conf
 
 rsyslogd
 
-yarn start:oauth-server 
+yarn start:oauth-server &
+yarn start:syslog-server &
 
 tail -f /dev/null

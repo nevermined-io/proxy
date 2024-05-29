@@ -53,16 +53,4 @@ function introspectAccessToken(r) {
     );
 }
 
-function trackAccessRequest(r) {
-    r.log("Tracking asset access request: " + JSON.stringify(r))
-    r.subrequest("/_oauth2_send_access_tx",
-        function(reply) {
-            r.log(`Reply: ${JSON.stringify(reply)}`);
-            if (reply.status != 200) {
-                r.error(`Unable to track asset access request`);                
-            }
-        }
-    );
-}
-
-export default { introspectAccessToken, trackAccessRequest }
+export default { introspectAccessToken }
