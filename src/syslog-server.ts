@@ -9,7 +9,7 @@ const logger = require('pino')({
 })
 
 const SYSLOG_SERVER_PORT = Number(process.env.SYSLOG_SERVER_PORT) || 1514
-const SYSLOG_SERVER_HOST = process.env.SYSLOG_SERVER_HOST || '0.0.0.0'
+const SYSLOG_SERVER_HOST = process.env.SYSLOG_SERVER_HOST || '127.0.0.1'
 
 const BACKEND_API_URI =
   process.env.BACKEND_API_URI || 'http://localhost:3001'
