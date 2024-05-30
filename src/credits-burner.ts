@@ -147,7 +147,7 @@ const burnTransactions = async (
       }
 
       try {
-        nvmCredits = BigInt(nvmCredits)
+        nvmCredits = BigInt(tx.nvmCredits)
         nvmCredits = nvmCredits < 0n ? undefined : nvmCredits
       } catch (error) {
         logger.warn(`Unable to parse credits: ${tx.nvmCredits}`)
