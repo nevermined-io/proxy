@@ -15,7 +15,6 @@ const BACKEND_API_URI =
   process.env.BACKEND_API_URI || 'http://localhost:3001'
 
 const BACKEND_AUTH_TOKEN = process.env.BACKEND_AUTH_TOKEN || ''
-const NGINX_TAG = process.env.NGINX_TAG || 'nginx'
 
 // Required because we are dealing with self signed certificates locally
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -57,8 +56,11 @@ const server = new SyslogServer()
 
 server.onMessage(async (message) => {
   try {
+    // TODO: Somehow the parsing of messages stopped working, so we are doing it manually
+    // const messageString = message.parsedMessage['msg'].replace(`${NGINX_TAG}: `,'')
     // console.log(message)
-    const messageString = message.parsedMessage['msg'].replace(`${NGINX_TAG}: `,'')
+    const starts = message.message.indexOf('{')
+    const messageString = message.message.substring(starts)    
     logger.info(`Received syslog message: ${messageString}`)
     
     const _obj = JSON.parse(messageString)
