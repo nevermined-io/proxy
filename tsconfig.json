@@ -8,7 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es2020",
+    "target": "ES2022",
     "sourceMap": true,
     "outDir": "./dist/src",
     "rootDir": "src",
@@ -17,8 +17,11 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "composite": true,
-    "allowJs": true
+    "allowJs": true,
+    "strict": true,
+    "strictPropertyInitialization": false
+
 },
 "include": ["**/*.ts"],
-"exclude": ["node_modules"]
+"exclude": ["node_modules"],
 }

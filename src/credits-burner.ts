@@ -101,8 +101,9 @@ const burnTransactions = async (
   txs: any[],
   account: NvmAccount,
 ): Promise<TransactionsProcessed> => {
-  const results = []
-  const errors = []
+
+  const results: any[] = []
+  const errors: any[] = []
   let activeContractAddress = ''
 
   logger.trace(`Using account: ${account.getId()}`)
@@ -115,7 +116,7 @@ const burnTransactions = async (
       const serviceDID = tx.did
       const consumer = tx.consumer
       const upstreamStatus = tx.accessResult
-      let nvmCredits: bigint
+      let nvmCredits: bigint | undefined
 
       if (serviceDID === undefined || serviceDID === '')
         throw new Error(`Invalid DID: ${serviceDID}`)
@@ -255,7 +256,7 @@ const updateDBTransactions = async (
       const result = await pgClient.query(updateQuery)
       logger.info(`DB transaction updated to Error: ${error.atxId} with result ${result.rowCount}`)
     } catch (error) {
-      logger.warn(`Unable to update DB transaction to Error: ${error.message}}`)
+      logger.warn(`Unable to update DB transaction to Error: ${(error as Error).message}}`)
       logger.warn(`ERROR: ${(error as Error).message}`)
     }
   }
@@ -277,6 +278,10 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
 }
 
 const getAccount = (config: ConfigEntry, nvm: Nevermined): NvmAccount => {
+  if (config.nvm.neverminedNodeAddress === undefined) {
+    logger.error(`ERROR: Nevermined Node address is not set in the configuration`)
+    process.exit(1)
+  }
   try {
     return nvm.accounts.getAccount(config.nvm.neverminedNodeAddress)
   } catch (error) {

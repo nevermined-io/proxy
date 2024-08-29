@@ -224,6 +224,7 @@
     node-fetch "^2.6.1"
     os-browserify "^0.3.0"
     path-browserify "^1.0.1"
+    permissionless "^0.1.22"
     pluralize "^8.0.0"
     save-file "^2.3.1"
     stream-browserify "^3.0.0"
@@ -4267,6 +4268,11 @@ pbkdf2@^3.0.3, pbkdf2@^3.1.2:
     ripemd160 "^2.0.1"
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
+
+permissionless@^0.1.22:
+  version "0.1.45"
+  resolved "https://registry.yarnpkg.com/permissionless/-/permissionless-0.1.45.tgz#0a8f51c0cfd0085d36f651ea5ea69c61c5967c18"
+  integrity sha512-YJJrNFeP3T7mmfXExZsGz0J8SfOPgYzT3fyRIJtImFcUI2UmnyBQLrFt+BaiIXNogzAQuBvOSi6KKtyBePJ2/Q==
 
 pg-cloudflare@^1.1.1:
   version "1.1.1"
