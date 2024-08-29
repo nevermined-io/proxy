@@ -35,7 +35,7 @@ COPY conf/nginx/oauth2.js /etc/nginx/conf.d/oauth2.js
 COPY conf/rsyslog/51-upstream.template.conf /etc/rsyslog.d/51-upstream.conf
 
 # Preparing OAuth Server
-COPY package.json ./
+COPY package.json yarn.lock ./
 COPY tsconfig* ./
 COPY src ./src
 
