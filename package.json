@@ -31,7 +31,7 @@
     "dev:burner": "ts-node src/credits-burner.ts"
   },
   "dependencies": {
-    "@nevermined-io/sdk": "3.0.29",
+    "@nevermined-io/sdk": "3.0.31",
     "ethers": "^6.13.2",
     "express": "^4.18.2",
     "http-proxy": "^1.18.1",

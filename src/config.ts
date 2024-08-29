@@ -69,6 +69,7 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
     ...config,
     nvm: {
       ...config.nvm,
+      chainId: Number(config.networkId),
       artifactsFolder: ARTIFACTS_PATH,
       circuitsFolder: undefined,
       accounts,
