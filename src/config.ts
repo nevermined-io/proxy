@@ -16,7 +16,7 @@ export interface ConfigEntry {
   envDescription?: string
   envUrl?: string
   isProduction?: boolean
-  networkId?: string
+  chainId?: string
   networkName?: string
   contractsVersion?: string
   tagName?: string
@@ -69,7 +69,6 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
     ...config,
     nvm: {
       ...config.nvm,
-      chainId: Number(config.networkId),
       artifactsFolder: ARTIFACTS_PATH,
       circuitsFolder: undefined,
       accounts,
@@ -84,6 +83,7 @@ export const getWalletFromJSON = (keyfilePath: string, password: string): any =>
 
 const networkConfigTemplate = {
   nvm: {
+    chainId: Number(process.env.NETWORK_ID) || 421614,
     web3ProviderUri: process.env.WEB3_PROVIDER_URL || 'http://contracts.nevermined.localnet',
     marketplaceUri: process.env.MARKETPLACE_API_URL || 'http://marketplace.nevermined.localnet',
     graphHttpUri: '',
@@ -91,7 +91,6 @@ const networkConfigTemplate = {
     neverminedNodeAddress: process.env.NODE_ADDRESS,
     verbose: process.env.VERBOSE || true,
   },
-  networkId: process.env.NETWORK_ID || '421613',
   networkName: process.env.NETWORK_NAME || 'arbitrum-goerli',
   contractsVersion: process.env.CONTRACTS_VERSION || '3.5.2',
   tagName: process.env.CONTRACTS_TAG || 'public',
