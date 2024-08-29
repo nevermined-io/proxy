@@ -1,16 +1,15 @@
 import {
-  Account,
   ChargeType,
   DDO,
   NFTServiceAttributes,
   Nevermined,
+  NvmAccount,
   ServiceNFTAccess,
   jsonReplacer,
 } from '@nevermined-io/sdk'
 import { Client } from 'pg'
-import { ConfigEntry, getNVMConfig, loadZerodevSigner, postgresConfigTemplate } from './config'
 import pino from 'pino'
-import { ZeroDevAccountSigner } from '@zerodev/sdk'
+import { ConfigEntry, getNVMConfig, postgresConfigTemplate } from './config'
 
 const verbose = process.env.VERBOSE === 'true'
 const maxRetries = process.env.MAX_RETRIES || 3
@@ -100,8 +99,7 @@ const getTransactionBatches = async (pgClient: Client): Promise<any> => {
 const burnTransactions = async (
   nvm: Nevermined,
   txs: any[],
-  account: Account,
-  zerodevSigner?: ZeroDevAccountSigner<'ECDSA'>,
+  account: NvmAccount,
 ): Promise<TransactionsProcessed> => {
   const results = []
   const errors = []
@@ -189,9 +187,7 @@ const burnTransactions = async (
           logger.info(
             `Burning ${adjustedCredits} credits from user ${consumer} on DID ${subscriptionDID} using account ${account.getId()}`,
           )
-          await nvm.nfts1155.burnFromHolder(consumer, tokenId, adjustedCredits, account, {
-            zeroDevSigner: zerodevSigner,
-          })
+          await nvm.nfts1155.burnFromHolder(consumer, tokenId, adjustedCredits, account)
           results.push({ atxId: tx.atxId, creditsBurned: adjustedCredits, message: 'Burned' })
         } else if (userBalance === 0n) {
           logger.warn(
@@ -203,9 +199,7 @@ const burnTransactions = async (
           logger.warn(
             `User ${consumer} does not have enough credits to burn ${nvmCredits} credits on DID ${serviceDID}, burning remaining balance: ${userBalance}`,
           )
-          await nvm.nfts1155.burnFromHolder(consumer, tokenId, userBalance, account, {
-            zeroDevSigner: zerodevSigner,
-          })
+          await nvm.nfts1155.burnFromHolder(consumer, tokenId, userBalance, account)
           results.push({ atxId: tx.atxId, creditsBurned: userBalance, message: 'Burned' })
           
         }
@@ -282,7 +276,7 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   }
 }
 
-const getAccount = (config: ConfigEntry, nvm: Nevermined): Account => {
+const getAccount = (config: ConfigEntry, nvm: Nevermined): NvmAccount => {
   try {
     return nvm.accounts.getAccount(config.nvm.neverminedNodeAddress)
   } catch (error) {
@@ -297,23 +291,14 @@ export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve
 const main = async () => {
   config = await getNVMConfig()
   const nvm = await loadNevermined(config, verbose)
-
-  let account: Account
-  let zerodevSigner: ZeroDevAccountSigner<'ECDSA'> | undefined
-
-  if (config.zerodevProjectId && config.zerodevProjectId !== '') {
-    zerodevSigner = await loadZerodevSigner(config.signer, config.zerodevProjectId)
-    account = await Account.fromZeroDevSigner(zerodevSigner)
-  } else {
-    account = getAccount(config, nvm)
-  }
+  const account = getAccount(config, nvm)
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const pgClient = await loadPostgresClient(postgresConfigTemplate)
 
     const batches = await getTransactionBatches(pgClient)
-    const txs = await burnTransactions(nvm, batches, account, zerodevSigner)
+    const txs = await burnTransactions(nvm, batches, account)
 
     logger.trace(
       `Transactions to update: Success = ${txs.success.length} - Errors = ${txs.errors.length}`,

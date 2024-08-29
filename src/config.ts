@@ -1,12 +1,10 @@
 import {
-  convertEthersV6SignerToAccountSigner,
-  makeAccounts,
+  makeWallets,
   NeverminedOptions,
-  Web3Provider,
+  NvmAccount,
 } from '@nevermined-io/sdk'
-import { ZeroDevAccountSigner, ZeroDevEthersProvider } from '@zerodev/sdk'
 
-import { ethers, HDNodeWallet, Signer, Wallet } from 'ethers'
+import { ethers, Signer } from 'ethers'
 import * as fs from 'fs'
 import os from 'os'
 
@@ -55,28 +53,20 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
     )
   }
 
-  const provider = await Web3Provider.getWeb3(config.nvm)
-
-  let signer: Signer
-  let accounts: ethers.Wallet[] = []
+  let accounts: NvmAccount[] = []
 
   if (!process.env.SEED_WORDS) {
-    signer = Wallet.fromEncryptedJsonSync(
-      fs.readFileSync(process.env.KEYFILE_PATH!).toString(),
-      process.env.KEYFILE_PASSWORD!,
-    )
 
-    accounts.push(
-      getWalletFromJSON(process.env.KEYFILE_PATH!, process.env.KEYFILE_PASSWORD!) as Wallet,
-    )
+    const wallet = getWalletFromJSON(process.env.KEYFILE_PATH!, process.env.KEYFILE_PASSWORD!)
+    const acc = NvmAccount.fromAccount(wallet)
+
+    accounts.push(acc)
   } else {
-    signer = Wallet.fromPhrase(config.seed!)
-    accounts = makeAccounts(config.seed!)
+    accounts = makeWallets(config.seed!)
   }
 
   return {
     ...config,
-    signer: signer.connect(provider),
     nvm: {
       ...config.nvm,
       artifactsFolder: ARTIFACTS_PATH,
@@ -86,19 +76,7 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
   }
 }
 
-export async function loadZerodevSigner(
-  owner: Signer,
-  projectId: string,
-): Promise<ZeroDevAccountSigner<'ECDSA'>> {
-  const zerodevProvider = await ZeroDevEthersProvider.init('ECDSA', {
-    projectId,
-    owner: convertEthersV6SignerToAccountSigner(owner),
-  })
-
-  return zerodevProvider.getAccountSigner()
-}
-
-export const getWalletFromJSON = (keyfilePath: string, password: string): Wallet | HDNodeWallet => {
+export const getWalletFromJSON = (keyfilePath: string, password: string): any => {
   const data = fs.readFileSync(keyfilePath).toString()
   return ethers.Wallet.fromEncryptedJsonSync(data, password)
 }
@@ -119,7 +97,6 @@ const networkConfigTemplate = {
   erc20TokenAddress: process.env.TOKEN_ADDRESS || '0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63',
   gasMultiplier: process.env.GAS_MULTIPLIER || 0,
   gasPriceMultiplier: process.env.GAS_PRICE_MULTIPLIER || 0,
-  zerodevProjectId: process.env.ZERODEV_PROJECT_ID,
 }
 
 export const postgresConfigTemplate = {

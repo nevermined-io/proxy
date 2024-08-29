@@ -1,7 +1,7 @@
 {
   "name": "@nevermined-io/proxy",
   "description": "Nevermined Proxy to gatekeep access to the remote web services",
-  "version": "0.8.5",
+  "version": "0.8.6-rc0",
   "main": "index.js",
   "keywords": [],
   "author": "Nevermined <root@nevermined.io>",
@@ -31,7 +31,8 @@
     "dev:burner": "ts-node src/credits-burner.ts"
   },
   "dependencies": {
-    "@nevermined-io/sdk": "2.2.2",
+    "@nevermined-io/sdk": "3.0.29",
+    "ethers": "^6.13.2",
     "express": "^4.18.2",
     "http-proxy": "^1.18.1",
     "jose": "^4.5.1",
@@ -40,8 +41,7 @@
     "pg": "^8.11.3",
     "pino": "^8.15.4",
     "syslog-server-ts": "0.4.2",
-    "typescript": "^5.1.6",
-    "@zerodev/sdk": "^4.5.5"
+    "typescript": "^5.1.6"
   },
   "devDependencies": {
     "@types/node": "^20.1.0",
