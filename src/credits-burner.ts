@@ -9,7 +9,7 @@ import {
 } from '@nevermined-io/sdk'
 import { Client } from 'pg'
 import pino from 'pino'
-import { ConfigEntry, getNVMConfig, postgresConfigTemplate } from './config'
+import { ConfigEntry, getNVMConfig, getWalletFromJSON, postgresConfigTemplate } from './config'
 
 const verbose = process.env.VERBOSE === 'true'
 const maxRetries = process.env.MAX_RETRIES || 3
@@ -277,26 +277,12 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   }
 }
 
-const getAccount = (config: ConfigEntry, nvm: Nevermined): NvmAccount => {
-  if (config.nvm.neverminedNodeAddress === undefined) {
-    logger.error(`ERROR: Nevermined Node address is not set in the configuration`)
-    process.exit(1)
-  }
-  try {
-    return nvm.accounts.getAccount(config.nvm.neverminedNodeAddress)
-  } catch (error) {
-    logger.error(`Unable to get NODE account`)
-    logger.error(`ERROR: ${(error as Error).message}`)
-    process.exit(1)
-  }
-}
-
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const main = async () => {
   config = await getNVMConfig()
   const nvm = await loadNevermined(config, verbose)
-  const account = getAccount(config, nvm)
+  const account = getWalletFromJSON(config.keyfilePath!, config.keyfilePassword!)
 
   // eslint-disable-next-line no-constant-condition
   while (true) {

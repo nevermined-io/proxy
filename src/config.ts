@@ -3,6 +3,7 @@ import {
   NeverminedOptions,
   NvmAccount,
 } from '@nevermined-io/sdk'
+import { privateKeyToAccount } from 'viem/accounts'
 
 import { ethers, Signer } from 'ethers'
 import * as fs from 'fs'
@@ -53,17 +54,7 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
     )
   }
 
-  let accounts: NvmAccount[] = []
-
-  if (!process.env.SEED_WORDS) {
-
-    const wallet = getWalletFromJSON(process.env.KEYFILE_PATH!, process.env.KEYFILE_PASSWORD!)
-    const acc = NvmAccount.fromAccount(wallet)
-
-    accounts.push(acc)
-  } else {
-    accounts = makeWallets(config.seed!)
-  }
+  const accounts: NvmAccount[] = process.env.SEED_WORDS ? makeWallets(config.seed!) : [getWalletFromJSON(process.env.KEYFILE_PATH!, process.env.KEYFILE_PASSWORD!)]
 
   return {
     ...config,
@@ -76,9 +67,11 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
   }
 }
 
-export const getWalletFromJSON = (keyfilePath: string, password: string): any => {
+export const getWalletFromJSON = (keyfilePath: string, password: string): NvmAccount => {
   const data = fs.readFileSync(keyfilePath).toString()
-  return ethers.Wallet.fromEncryptedJsonSync(data, password)
+  const wallet = ethers.Wallet.fromEncryptedJsonSync(data, password)
+  const account = privateKeyToAccount(wallet.privateKey as `0x${string}`)
+  return NvmAccount.fromAccount(account)
 }
 
 const networkConfigTemplate = {
