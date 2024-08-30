@@ -1,16 +1,15 @@
 import {
-  Account,
   ChargeType,
   DDO,
   NFTServiceAttributes,
   Nevermined,
+  NvmAccount,
   ServiceNFTAccess,
   jsonReplacer,
 } from '@nevermined-io/sdk'
 import { Client } from 'pg'
-import { ConfigEntry, getNVMConfig, loadZerodevSigner, postgresConfigTemplate } from './config'
 import pino from 'pino'
-import { ZeroDevAccountSigner } from '@zerodev/sdk'
+import { ConfigEntry, getNVMConfig, getWalletFromJSON, postgresConfigTemplate } from './config'
 
 const verbose = process.env.VERBOSE === 'true'
 const maxRetries = process.env.MAX_RETRIES || 3
@@ -100,11 +99,11 @@ const getTransactionBatches = async (pgClient: Client): Promise<any> => {
 const burnTransactions = async (
   nvm: Nevermined,
   txs: any[],
-  account: Account,
-  zerodevSigner?: ZeroDevAccountSigner<'ECDSA'>,
+  account: NvmAccount,
 ): Promise<TransactionsProcessed> => {
-  const results = []
-  const errors = []
+
+  const results: any[] = []
+  const errors: any[] = []
   let activeContractAddress = ''
 
   logger.trace(`Using account: ${account.getId()}`)
@@ -117,7 +116,7 @@ const burnTransactions = async (
       const serviceDID = tx.did
       const consumer = tx.consumer
       const upstreamStatus = tx.accessResult
-      let nvmCredits: bigint
+      let nvmCredits: bigint | undefined
 
       if (serviceDID === undefined || serviceDID === '')
         throw new Error(`Invalid DID: ${serviceDID}`)
@@ -189,9 +188,7 @@ const burnTransactions = async (
           logger.info(
             `Burning ${adjustedCredits} credits from user ${consumer} on DID ${subscriptionDID} using account ${account.getId()}`,
           )
-          await nvm.nfts1155.burnFromHolder(consumer, tokenId, adjustedCredits, account, {
-            zeroDevSigner: zerodevSigner,
-          })
+          await nvm.nfts1155.burnFromHolder(consumer, tokenId, adjustedCredits, account)
           results.push({ atxId: tx.atxId, creditsBurned: adjustedCredits, message: 'Burned' })
         } else if (userBalance === 0n) {
           logger.warn(
@@ -203,9 +200,7 @@ const burnTransactions = async (
           logger.warn(
             `User ${consumer} does not have enough credits to burn ${nvmCredits} credits on DID ${serviceDID}, burning remaining balance: ${userBalance}`,
           )
-          await nvm.nfts1155.burnFromHolder(consumer, tokenId, userBalance, account, {
-            zeroDevSigner: zerodevSigner,
-          })
+          await nvm.nfts1155.burnFromHolder(consumer, tokenId, userBalance, account)
           results.push({ atxId: tx.atxId, creditsBurned: userBalance, message: 'Burned' })
           
         }
@@ -261,7 +256,7 @@ const updateDBTransactions = async (
       const result = await pgClient.query(updateQuery)
       logger.info(`DB transaction updated to Error: ${error.atxId} with result ${result.rowCount}`)
     } catch (error) {
-      logger.warn(`Unable to update DB transaction to Error: ${error.message}}`)
+      logger.warn(`Unable to update DB transaction to Error: ${(error as Error).message}}`)
       logger.warn(`ERROR: ${(error as Error).message}`)
     }
   }
@@ -282,38 +277,19 @@ const cleanupDBPendingTransactions = async (pgClient: Client): Promise<any> => {
   }
 }
 
-const getAccount = (config: ConfigEntry, nvm: Nevermined): Account => {
-  try {
-    return nvm.accounts.getAccount(config.nvm.neverminedNodeAddress)
-  } catch (error) {
-    logger.error(`Unable to get NODE account`)
-    logger.error(`ERROR: ${(error as Error).message}`)
-    process.exit(1)
-  }
-}
-
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const main = async () => {
   config = await getNVMConfig()
   const nvm = await loadNevermined(config, verbose)
-
-  let account: Account
-  let zerodevSigner: ZeroDevAccountSigner<'ECDSA'> | undefined
-
-  if (config.zerodevProjectId && config.zerodevProjectId !== '') {
-    zerodevSigner = await loadZerodevSigner(config.signer, config.zerodevProjectId)
-    account = await Account.fromZeroDevSigner(zerodevSigner)
-  } else {
-    account = getAccount(config, nvm)
-  }
+  const account = getWalletFromJSON(config.keyfilePath!, config.keyfilePassword!)
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const pgClient = await loadPostgresClient(postgresConfigTemplate)
 
     const batches = await getTransactionBatches(pgClient)
-    const txs = await burnTransactions(nvm, batches, account, zerodevSigner)
+    const txs = await burnTransactions(nvm, batches, account)
 
     logger.trace(
       `Transactions to update: Success = ${txs.success.length} - Errors = ${txs.errors.length}`,

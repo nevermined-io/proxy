@@ -195,9 +195,6 @@ Related with the account used to interact with the Smart Contracts:
 - `KEYFILE_PATH` - The path to the account keyfile
 - `KEYFILE_PASSWORD` - The password of the account keyfile
 
-To enable smart contract wallet accounts through zerodev you need to set:
-
-- `ZERODEV_PROJECT_ID` - The _project id_ for your zerodev account
 
 ## External references
 

@@ -1,12 +1,11 @@
 import {
-  convertEthersV6SignerToAccountSigner,
-  makeAccounts,
+  makeWallets,
   NeverminedOptions,
-  Web3Provider,
+  NvmAccount,
 } from '@nevermined-io/sdk'
-import { ZeroDevAccountSigner, ZeroDevEthersProvider } from '@zerodev/sdk'
+import { privateKeyToAccount } from 'viem/accounts'
 
-import { ethers, HDNodeWallet, Signer, Wallet } from 'ethers'
+import { ethers, Signer } from 'ethers'
 import * as fs from 'fs'
 import os from 'os'
 
@@ -18,7 +17,7 @@ export interface ConfigEntry {
   envDescription?: string
   envUrl?: string
   isProduction?: boolean
-  networkId?: string
+  chainId?: string
   networkName?: string
   contractsVersion?: string
   tagName?: string
@@ -55,28 +54,10 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
     )
   }
 
-  const provider = await Web3Provider.getWeb3(config.nvm)
-
-  let signer: Signer
-  let accounts: ethers.Wallet[] = []
-
-  if (!process.env.SEED_WORDS) {
-    signer = Wallet.fromEncryptedJsonSync(
-      fs.readFileSync(process.env.KEYFILE_PATH!).toString(),
-      process.env.KEYFILE_PASSWORD!,
-    )
-
-    accounts.push(
-      getWalletFromJSON(process.env.KEYFILE_PATH!, process.env.KEYFILE_PASSWORD!) as Wallet,
-    )
-  } else {
-    signer = Wallet.fromPhrase(config.seed!)
-    accounts = makeAccounts(config.seed!)
-  }
+  const accounts: NvmAccount[] = process.env.SEED_WORDS ? makeWallets(config.seed!) : [getWalletFromJSON(process.env.KEYFILE_PATH!, process.env.KEYFILE_PASSWORD!)]
 
   return {
     ...config,
-    signer: signer.connect(provider),
     nvm: {
       ...config.nvm,
       artifactsFolder: ARTIFACTS_PATH,
@@ -86,25 +67,16 @@ export async function getNVMConfig(_accountIndex = 0): Promise<ConfigEntry> {
   }
 }
 
-export async function loadZerodevSigner(
-  owner: Signer,
-  projectId: string,
-): Promise<ZeroDevAccountSigner<'ECDSA'>> {
-  const zerodevProvider = await ZeroDevEthersProvider.init('ECDSA', {
-    projectId,
-    owner: convertEthersV6SignerToAccountSigner(owner),
-  })
-
-  return zerodevProvider.getAccountSigner()
-}
-
-export const getWalletFromJSON = (keyfilePath: string, password: string): Wallet | HDNodeWallet => {
+export const getWalletFromJSON = (keyfilePath: string, password: string): NvmAccount => {
   const data = fs.readFileSync(keyfilePath).toString()
-  return ethers.Wallet.fromEncryptedJsonSync(data, password)
+  const wallet = ethers.Wallet.fromEncryptedJsonSync(data, password)
+  const account = privateKeyToAccount(wallet.privateKey as `0x${string}`)
+  return NvmAccount.fromAccount(account)
 }
 
 const networkConfigTemplate = {
   nvm: {
+    chainId: Number(process.env.NETWORK_ID) || 421614,
     web3ProviderUri: process.env.WEB3_PROVIDER_URL || 'http://contracts.nevermined.localnet',
     marketplaceUri: process.env.MARKETPLACE_API_URL || 'http://marketplace.nevermined.localnet',
     graphHttpUri: '',
@@ -112,14 +84,12 @@ const networkConfigTemplate = {
     neverminedNodeAddress: process.env.NODE_ADDRESS,
     verbose: process.env.VERBOSE || true,
   },
-  networkId: process.env.NETWORK_ID || '421613',
   networkName: process.env.NETWORK_NAME || 'arbitrum-goerli',
   contractsVersion: process.env.CONTRACTS_VERSION || '3.5.2',
   tagName: process.env.CONTRACTS_TAG || 'public',
   erc20TokenAddress: process.env.TOKEN_ADDRESS || '0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63',
   gasMultiplier: process.env.GAS_MULTIPLIER || 0,
   gasPriceMultiplier: process.env.GAS_PRICE_MULTIPLIER || 0,
-  zerodevProjectId: process.env.ZERODEV_PROJECT_ID,
 }
 
 export const postgresConfigTemplate = {

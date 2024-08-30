@@ -5,7 +5,7 @@ RUN apk add --no-cache autoconf automake alpine-sdk bash
 
 
 # Preparing Credits Burner
-COPY package.json ./
+COPY package.json yarn.lock ./
 COPY tsconfig* ./
 COPY src ./src
 

@@ -57,7 +57,7 @@ const urlMatches = (
   urlRequested: URL,
 ): { matches: boolean; urlMatching: URL | undefined } => {
   let matches = false
-  let urlMatching = undefined
+  let urlMatching: URL | undefined
   endpoints.forEach((e) => {
     try {      
       const endpoint = new URL(e)
@@ -95,7 +95,7 @@ const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
     throw new Error(`${urlRequested.origin} not in ${payload.endpoints}`)
   }
 
-  payload.hostname = urlMatching.host
+  payload.hostname = urlMatching?.host
   return payload
 }
 
