@@ -33,6 +33,13 @@ const JWT_SECRET = Uint8Array.from(JWT_SECRET_PHRASE.split('').map((x) => parseI
 const MARKETPLACE_API_URI =
   process.env.MARKETPLACE_API_URI || 'https://marketplace.nevermined.localnet'
 
+// The host of the backend. This is for the agents/services using the Nevermined backend to service their requests
+const BACKEND_URL = new URL(process.env.BACKEND_API_URI || 'http://localhost:3001')
+
+// The token to be used to authenticate the backend requests coming from the Proxy
+// This is used by AI Query Protocol scenarios where the services are running using the Nevermined infrastructure
+const PROXY_AUTH_TOKEN = process.env.PROXY_AUTH_TOKEN || 'changeme'
+
 const WEB3_PROVIDER_URL = process.env.WEB3_PROVIDER_URL || 'http://contracts.nevermined.localnet'
 
 // Required because we are dealing with self signed certificates locally
@@ -190,7 +197,10 @@ app.post('/introspect', async (req, res) => {
       let serviceToken = ''
       let authHeader = ''
       try {
-        if (
+        if (BACKEND_URL.origin === urlRequested.origin) { // If the request is for the backend, we use the proxy token
+          serviceToken = PROXY_AUTH_TOKEN
+          authHeader = `Bearer ${serviceToken}`
+        } else if (
           payload.headers.authentication.type === 'bearer' ||
           payload.headers.authentication.type === 'oauth'
         ) {

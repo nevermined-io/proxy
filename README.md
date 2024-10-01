@@ -56,6 +56,8 @@ The OAuth Server accepts the following environment variables:
 - `SERVER_HOST` - The host or address the OAuth server will be listen. By default `127.0.0.1` but if you need to configure from out of the server/pod it can be `0.0.0.0`
 - `SERVER_PORT` - Port the OAuth server will be listening. It is `4000` by default
 - `JWT_SECRET_PHRASE` - Shared secret between a Node instance and the Proxy. This secret phrase will be used to encrypt JWT messages by the Node and decrypt by the Proxy
+- `BACKEND_API_URI` - The URL of the Nevermined Backend API
+- `PROXY_AUTH_TOKEN` - The token to be used to authenticate the requests going to the Nevermined backend coming from the Proxy (Query Protocol)
 
 The NGINX container accepts the following environment variables:
 
