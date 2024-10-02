@@ -103,7 +103,7 @@ const getJwtPayload = async (userJwt: string, urlRequested: URL) => {
   }
 
   payload.hostname = urlMatching?.host
-  return payload
+  return { payload, urlMatching }
 }
 
 const validateSubscriptionByType = async (payload: JWTPayload): Promise<boolean> => {
@@ -180,7 +180,7 @@ app.post('/introspect', async (req, res) => {
       const userJwt = req.headers[NVM_AUTHORIZATION_HEADER]
 
       // Validate the JWT and check if it's not expired
-      const payload = await getJwtPayload(userJwt, urlRequested)
+      const { payload, urlMatching } = await getJwtPayload(userJwt, urlRequested)
 
       // If the subscription associated to the service is credits based, we check if the user has enough credits
       // Service DID: payload.did
@@ -197,7 +197,7 @@ app.post('/introspect', async (req, res) => {
       let serviceToken = ''
       let authHeader = ''
       try {
-        if (BACKEND_URL.origin === urlRequested.origin) { // If the request is for the backend, we use the proxy token
+        if (urlMatching && BACKEND_URL.origin === urlMatching.origin) { // If the request is for the backend, we use the proxy token
           serviceToken = PROXY_AUTH_TOKEN
           authHeader = `Bearer ${serviceToken}`
         } else if (
